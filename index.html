@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Technique Odyssea</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-bottom: 20px; background: #f9f9f9; }
+        button { padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; }
+        button:hover { background: #555; }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        #status { font-weight: bold; color: blue; }
+    </style>
+</head>
+<body>
+
+    <h1>🛠️ Test Technique Odyssea</h1>
+    <p id="status">Prêt à tester.</p>
+
+    <div class="box">
+        <h3>1. Test Gemini (Cerveau)</h3>
+        <textarea id="geminiPrompt" placeholder="Que veux-tu dire à l'IA ?">Qui est le Bateleur ?</textarea>
+        <button onclick="testGemini()">Envoyer à Gemini</button>
+        <p><strong>Réponse :</strong> <span id="geminiResponse">...</span></p>
+    </div>
+
+    <div class="box">
+        <h3>2. Test ElevenLabs (Voix)</h3>
+        <textarea id="voiceText" placeholder="Texte à lire...">Bienvenue voyageur. Je suis l'esprit du Tarot.</textarea>
+        
+        <label>Choix de l'Archétype (Voice ID) :</label>
+        <select id="voiceIdSelect">
+            <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Défaut)</option>
+            <option value="AZnzlk1XvdvUeBnXmlld">Domi (Femme forte)</option>
+            <option value="ErXwobaYiN019PkySvjV">Antoni (Homme calme)</option>
+            </select>
+
+        <button onclick="testVoice()">Générer l'Audio</button>
+        <br><br>
+        <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <script>
+        // Fonction pour appeler notre Backend Gemini
+        async function testGemini() {
+            const text = document.getElementById('geminiPrompt').value;
+            const status = document.getElementById('status');
+            const output = document.getElementById('geminiResponse');
+
+            status.innerText = "Appel à Gemini en cours...";
+            
+            try {
+                const req = await fetch('/.netlify/functions/api-gemini', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        message: text,
+                        systemPrompt: "Tu es un expert du Tarot. Réponds courtement."
+                    })
+                });
+                const res = await req.json();
+                
+                if(res.error) throw new Error(res.error);
+                
+                output.innerText = res.reply;
+                status.innerText = "Gemini a répondu !";
+            } catch (err) {
+                console.error(err);
+                status.innerText = "Erreur Gemini : " + err.message;
+            }
+        }
+
+        // Fonction pour appeler notre Backend ElevenLabs
+        async function testVoice() {
+            const text = document.getElementById('voiceText').value;
+            const voiceId = document.getElementById('voiceIdSelect').value;
+            const status = document.getElementById('status');
+            const player = document.getElementById('audioPlayer');
+
+            status.innerText = "Génération audio en cours (ça peut prendre 5-10s)...";
+
+            try {
+                const req = await fetch('/.netlify/functions/api-voice', {
+                    method: 'POST',
+                    body: JSON.stringify({ text: text, voiceId: voiceId })
+                });
+                const res = await req.json();
+
+                if(res.error) throw new Error(res.error);
+
+                // Convertir le Base64 reçu en son jouable
+                const audioSrc = "data:audio/mpeg;base64," + res.audioContent;
+                player.src = audioSrc;
+                player.play();
+                status.innerText = "Audio généré !";
+
+            } catch (err) {
+                console.error(err);
+                status.innerText = "Erreur ElevenLabs : " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
