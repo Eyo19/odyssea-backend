@@ -1,66 +1,35 @@
 // netlify/functions/api-gemini.js
 export const handler = async (event) => {
   try {
-    // 1. Sécurité : Vérifier que la clé est bien là
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("ERREUR : Pas de clé API trouvée dans les variables Netlify.");
-      return { statusCode: 500, body: JSON.stringify({ error: "Configuration serveur incomplète (Clé manquante)." }) };
-    }
+    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: "Clé absente" }) };
 
-    // 2. Parsing du message utilisateur
-    if (!event.body) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Aucune donnée reçue." }) };
-    }
-    const body = JSON.parse(event.body);
-    const userMessage = body.message || "Bonjour";
-    const promptSysteme = body.systemPrompt || "Tu es un assistant utile.";
+    // ON DEMANDE LA LISTE, ON NE GÉNÈRE RIEN
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
 
-    // 3. L'URL CIBLE (La seule qui fonctionne à coup sûr aujourd'hui)
-    // On vise gemini-1.5-flash
-    const modelName = "gemini-1.5-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-    console.log(`Tentative de connexion au modèle : ${modelName}`);
-
-    // 4. Appel à Google
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [{ text: promptSysteme + "\n\n" + userMessage }] 
-        }]
-      }),
-    });
-
+    const response = await fetch(url, { method: "GET" });
     const data = await response.json();
 
-    // 5. Gestion des erreurs Google
     if (data.error) {
-      console.error("ERREUR GOOGLE :", JSON.stringify(data.error));
       return { 
         statusCode: 500, 
-        body: JSON.stringify({ 
-          error: `Erreur du modèle (${modelName}) : ${data.error.message}` 
-        }) 
+        body: JSON.stringify({ error: "Erreur Clé/Compte : " + data.error.message }) 
       };
     }
 
-    // 6. Succès
-    if (data.candidates && data.candidates[0].content) {
-        const aiText = data.candidates[0].content.parts[0].text;
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ reply: aiText }),
-        };
-    } else {
-        return { statusCode: 500, body: JSON.stringify({ error: "Réponse vide de l'IA." }) };
-    }
+    // On formate la liste pour qu'elle soit lisible
+    const models = data.models
+        .filter(m => m.supportedGenerationMethods.includes("generateContent")) // On garde ceux qui savent écrire
+        .map(m => m.name);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ 
+        reply: "DIAGNOSTIC RÉUSSI. Voici les modèles disponibles pour ta clé : \n" + models.join("\n") 
+      }),
+    };
 
   } catch (error) {
-    console.error("ERREUR CODE :", error);
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 };
