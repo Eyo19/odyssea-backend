@@ -1,51 +1,60 @@
 // netlify/functions/api-gemini.js
 export const handler = async (event) => {
   try {
-    // 1. Parsing du message (sécurité si le body est vide)
+    // 1. Sécurité et Parsing
     if (!event.body) {
         return { statusCode: 400, body: JSON.stringify({ error: "Pas de données envoyées" }) };
     }
     const body = JSON.parse(event.body);
     const userMessage = body.message || "Bonjour";
     const promptSysteme = body.systemPrompt || "Tu es un assistant utile.";
-
-    // 2. La Clé API
     const apiKey = process.env.GEMINI_API_KEY;
+
     if (!apiKey) {
         return { statusCode: 500, body: JSON.stringify({ error: "Clé API manquante sur le serveur" }) };
     }
 
-    // 3. L'URL EXACTE (C'est souvent ici que ça coince)
-    // On utilise la version stable 'gemini-1.5-flash' sans le suffixe 'latest' qui bug parfois
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    // 4. L'Appel à Google
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-            {
-                role: "user",
-                parts: [{ text: promptSysteme + "\n\n" + userMessage }] 
-            }
-        ]
-      }),
-    });
-
-    const data = await response.json();
-
-    // 5. Gestion des erreurs Google explicites
-    if (data.error) {
-        console.error("Erreur Google:", data.error); // Pour voir dans les logs Netlify
-        return { statusCode: 500, body: JSON.stringify({ error: "Erreur Google: " + data.error.message }) };
+    // --- FONCTION D'APPEL ---
+    // Cette fonction permet d'essayer plusieurs modèles différents
+    async function callGemini(modelName) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{
+                    role: "user",
+                    parts: [{ text: promptSysteme + "\n\n" + userMessage }] 
+                }]
+            }),
+        });
+        return await response.json();
     }
 
-    // 6. Succès !
+    // --- TENTATIVE 1 : Le modèle moderne (Flash) ---
+    console.log("Tentative avec gemini-1.5-flash...");
+    let data = await callGemini("gemini-1.5-flash");
+
+    // Si erreur "Not Found" ou autre, on passe au plan B
+    if (data.error) {
+        console.log("Échec Flash, tentative avec gemini-pro (Plan B)...");
+        console.log("Erreur reçue : ", data.error.message);
+        
+        // --- TENTATIVE 2 : Le modèle classique (Pro) ---
+        data = await callGemini("gemini-pro");
+    }
+
+    // --- RÉSULTAT FINAL ---
+    if (data.error) {
+        // Si les deux ont échoué, on renvoie l'erreur
+        return { statusCode: 500, body: JSON.stringify({ error: "Tous les modèles ont échoué. " + data.error.message }) };
+    }
+
     const aiText = data.candidates[0].content.parts[0].text;
     return {
-      statusCode: 200,
-      body: JSON.stringify({ reply: aiText }),
+        statusCode: 200,
+        body: JSON.stringify({ reply: aiText }),
     };
 
   } catch (error) {
