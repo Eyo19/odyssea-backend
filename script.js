@@ -593,3 +593,111 @@ function startLevel(level, manualSwitch) {
                     }
                 }
             });
+            
+            // --- SYSTÈME DE RENOMMAGE (POP-UP MAISON) ---
+            
+            // 1. La fonction appelée quand tu cliques sur le crayon
+            function renameSessionFromHub(id) {
+                const session = sessionList.find(s => s.id === id);
+                if (!session) return;
+                
+                // Au lieu de prompt(), on lance notre pop-up personnalisée
+                createCustomInput("Renommer le projet", session.name, (newName) => {
+                    if (newName && newName.trim() !== "") {
+                        session.name = newName.trim();
+                        saveAllSessions();
+                        renderHub(); // Mise à jour immédiate
+                    }
+                });
+            }
+            
+            // 2. La machine à fabriquer la fenêtre (Fonction utilitaire)
+            function createCustomInput(title, defaultValue, callback) {
+                // Création du fond noir
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0'; overlay.style.left = '0';
+                overlay.style.width = '100%'; overlay.style.height = '100%';
+                overlay.style.background = 'rgba(0,0,0,0.85)';
+                overlay.style.zIndex = '10000'; // Très haut pour être sûr
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.style.backdropFilter = 'blur(5px)';
+                
+                // Création de la boîte de dialogue
+                const box = document.createElement('div');
+                box.style.background = '#111';
+                box.style.border = '1px solid #d4af37';
+                box.style.padding = '25px';
+                box.style.borderRadius = '12px';
+                box.style.width = '85%';
+                box.style.maxWidth = '400px';
+                box.style.textAlign = 'center';
+                box.style.boxShadow = '0 0 30px rgba(212,175,55,0.3)';
+                
+                // Titre
+                const titleEl = document.createElement('h3');
+                titleEl.innerText = title;
+                titleEl.style.color = '#d4af37';
+                titleEl.style.marginTop = '0';
+                titleEl.style.fontFamily = 'Cinzel, serif';
+                
+                // Champ texte
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = defaultValue;
+                input.style.width = '100%';
+                input.style.padding = '10px';
+                input.style.marginTop = '15px';
+                input.style.marginBottom = '20px';
+                input.style.background = '#222';
+                input.style.border = '1px solid #444';
+                input.style.color = '#fff';
+                input.style.fontSize = '1.1rem';
+                input.style.borderRadius = '6px';
+                
+                // Boutons Container
+                const btnContainer = document.createElement('div');
+                btnContainer.style.display = 'flex';
+                btnContainer.style.gap = '10px';
+                
+                // Bouton Annuler
+                const cancelBtn = document.createElement('button');
+                cancelBtn.innerText = "Annuler";
+                cancelBtn.style.flex = '1';
+                cancelBtn.style.padding = '10px';
+                cancelBtn.style.background = 'transparent';
+                cancelBtn.style.border = '1px solid #666';
+                cancelBtn.style.color = '#888';
+                cancelBtn.style.borderRadius = '6px';
+                cancelBtn.onclick = () => document.body.removeChild(overlay);
+                
+                // Bouton Valider
+                const saveBtn = document.createElement('button');
+                saveBtn.innerText = "Valider";
+                saveBtn.style.flex = '1';
+                saveBtn.style.padding = '10px';
+                saveBtn.style.background = '#d4af37';
+                saveBtn.style.border = 'none';
+                saveBtn.style.color = '#000';
+                saveBtn.style.fontWeight = 'bold';
+                saveBtn.style.borderRadius = '6px';
+                
+                saveBtn.onclick = () => {
+                    callback(input.value); // On renvoie la valeur
+                    document.body.removeChild(overlay); // On ferme
+                };
+                
+                // Assemblage
+                btnContainer.appendChild(cancelBtn);
+                btnContainer.appendChild(saveBtn);
+                box.appendChild(titleEl);
+                box.appendChild(input);
+                box.appendChild(btnContainer);
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+                
+                // Focus automatique sur le champ (pour ouvrir le clavier)
+                setTimeout(() => input.focus(), 100);
+            }
