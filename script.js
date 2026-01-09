@@ -121,7 +121,7 @@
         }
 
         function goHome() { saveCurrentState(); window.location.reload(); }
-        function getCardData(levelId) { return GLOBAL_TAROT_DATA ? GLOBAL_TAROT_DATA.find(c => c.ID === levelId) : null; }
+        function getCardData(levelId) { return GLOBAL_TAROT_DATA ? GLOBAL_TAROT_DATA.find(c => c.ID == levelId) : null; }
 
         function renderSidebar() {
             const list = document.getElementById('arcana-list'); list.innerHTML = '';
