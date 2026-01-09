@@ -145,18 +145,58 @@
             });
         }
 
-        function startLevel(level, manualSwitch) {
-            gameState.currentLevel = level; renderSidebar(); stopChatAudio(); checkLightningStatus();
-            videoEl.muted = false; videoEl.volume = 1.0; videoEl.src = `videos/${level}.mp4`; 
-            const playPromise = videoEl.play();
-            if (playPromise !== undefined) { playPromise.then(_ => { updateVidBtn(true); }).catch(error => { updateVidBtn(false); }); }
-            if (!gameState.histories[level]) {
-                gameState.histories[level] = []; const card = getCardData(level);
-                if (card && card["TEXTE INTRO"]) gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+function startLevel(level, manualSwitch) {
+    gameState.currentLevel = level;
+    
+    // Si on est sur mobile, on ferme le menu après avoir cliqué
+    if (window.innerWidth <= 900) {
+        const sidebar = document.querySelector('.sidebar');
+        const btn = document.getElementById('mobile-menu-btn');
+        if (sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            if(btn) {
+                btn.innerHTML = "☰";
+                btn.style.zIndex = "100";
             }
-            renderChat(gameState.histories[level]); renderCardInfo(level); saveCurrentState();
         }
-
+    }
+    
+    renderSidebar(); 
+    stopChatAudio(); 
+    checkLightningStatus();
+    
+    // Gestion Sécurisée de la Vidéo pour Mobile
+    videoEl.src = `videos/${level}.mp4`; 
+    videoEl.muted = false; // On tente avec le son...
+    
+    const playPromise = videoEl.play();
+    
+    if (playPromise !== undefined) {
+        playPromise.then(_ => {
+            // Ça a marché (Ordi ou Android permissif)
+            updateVidBtn(true);
+        })
+        .catch(error => {
+            // Ça a bloqué (iPhone / Mobile strict)
+            console.log("Lecture auto bloquée (normal sur mobile) :", error);
+            // On ne fait rien de grave, on met juste le bouton en "Pause"
+            videoEl.muted = true; // Parfois ça aide de passer en muet
+            updateVidBtn(false); 
+        });
+    }
+    
+    // Le reste du code continue même si la vidéo a échoué !
+    if (!gameState.histories[level]) {
+        gameState.histories[level] = []; 
+        const card = getCardData(level);
+        if (card && card["TEXTE INTRO"]) {
+            gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+        }
+    }
+    renderChat(gameState.histories[level]); 
+    renderCardInfo(level); 
+    saveCurrentState();
+}
         // --- LOGIQUE BULLES/CHIPS ET COULEURS ---
         function parseKeywords(text) {
             if (!text) return [];
