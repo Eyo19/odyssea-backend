@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertisseur Tarot Data (XLSX vers JSON)</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            border: 2px solid #007bff;
+            color: white;
+            background-color: #007bff;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .success {
+            color: #28a745 !important;
+        }
+        .error {
+            color: #dc3545 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Convertisseur Tarot</h1>
+    <p>Transforme ton fichier Excel (tarot_data.xlsx) en données JSON pour le jeu.</p>
+    
+    <div class="upload-btn-wrapper">
+        <button class="btn">Choisir le fichier Excel</button>
+        <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" />
+    </div>
+
+    <div id="status">En attente de fichier...</div>
+</div>
+
+<script>
+    document.getElementById('fileUpload').addEventListener('change', handleFile, false);
+
+    function handleFile(e) {
+        const status = document.getElementById('status');
+        const file = e.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        status.innerText = "Lecture du fichier en cours...";
+        status.className = "";
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+
+                // On prend la première feuille de calcul
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Conversion en JSON
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (jsonData.length === 0) {
+                    throw new Error("Le fichier semble vide ou illisible.");
+                }
+
+                // Téléchargement du fichier
+                downloadJSON(jsonData, "tarot_data.json");
+                
+                status.innerText = "Succès ! Le fichier tarot_data.json a été téléchargé (" + jsonData.length + " entrées).";
+                status.className = "success";
+
+            } catch (error) {
+                console.error(error);
+                status.innerText = "Erreur : " + error.message;
+                status.className = "error";
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    function downloadJSON(data, filename) {
+        const jsonStr = JSON.stringify(data, null, 2); 
+        const blob = new Blob([jsonStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>

@@ -2,376 +2,92 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Odyssea - Prototype Vivant</title>
-    <style>
-        :root {
-            --bg-deep: #0f0c29;
-            --bg-panel: #1a1a2e;
-            --accent: #ffd700; /* Or Tarot */
-            --accent-dim: #b89b00;
-            --text-main: #e0e0e0;
-            --text-dim: #b0b0b0;
-            --user-bubble: #24243e;
-            --ai-bubble: #302b63;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Odyssea - De l'idée à l'incarnation</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, var(--bg-deep), #24243e);
-            color: var(--text-main);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        /* --- STRUCTURE --- */
-        .screen {
-            display: none;
-            width: 100%;
-            max-width: 500px;
-            height: 100%;
-            background: var(--bg-deep);
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-        .active { display: flex; }
-
-        /* --- HUB --- */
-        .hub-header { padding: 40px 20px; text-align: center; border-bottom: 1px solid #333; }
-        .hub-title { font-size: 2rem; color: var(--accent); letter-spacing: 4px; text-transform: uppercase; margin: 0; }
-        .book-list { flex-grow: 1; padding: 20px; overflow-y: auto; }
-        .book-card {
-            background: var(--bg-panel); padding: 20px; border-radius: 8px; margin-bottom: 15px;
-            border-left: 4px solid var(--accent); cursor: pointer; transition: transform 0.2s;
-        }
-        .book-card:hover { transform: translateX(5px); background: #252540; }
-
-        /* --- JEU --- */
-        .video-zone {
-            height: 30%;
-            background-size: cover; background-position: center;
-            position: relative; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            border-bottom: 2px solid var(--accent);
-            text-align: center; padding: 20px;
-        }
-        .video-overlay {
-            background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .chat-zone {
-            flex-grow: 1; padding: 20px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 15px;
-            scroll-behavior: smooth;
-        }
-
-        .message-row { display: flex; gap: 10px; align-items: flex-start; }
-        .message-row.user { justify-content: flex-end; }
-        
-        .message {
-            max-width: 80%; padding: 12px 16px; border-radius: 12px;
-            line-height: 1.5; font-size: 0.95rem; position: relative;
-        }
-        .ai-msg { background: var(--ai-bubble); border-bottom-left-radius: 2px; border-left: 2px solid var(--accent); }
-        .user-msg { background: var(--user-bubble); border-bottom-right-radius: 2px; color: var(--accent); text-align: right;}
-
-        /* Bouton Audio (Speaker) */
-        .audio-btn {
-            background: none; border: 1px solid #555; border-radius: 50%;
-            width: 30px; height: 30px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; color: var(--text-dim);
-            transition: all 0.2s; margin-top: 5px;
-        }
-        .audio-btn:hover { color: var(--accent); border-color: var(--accent); }
-        .audio-btn.loading { animation: spin 1s linear infinite; border-color: var(--accent); opacity: 0.7; }
-
-        /* Choix & Input */
-        .interaction-zone {
-            padding: 15px; background: rgba(15, 12, 41, 0.95);
-            border-top: 1px solid #333;
-        }
-        .choices-box { display: flex; flex-direction: column; gap: 10px; }
-        .choice-btn {
-            background: transparent; border: 1px solid var(--accent); color: var(--accent);
-            padding: 12px; border-radius: 5px; cursor: pointer; text-align: left;
-            transition: all 0.2s; font-size: 0.9rem;
-        }
-        .choice-btn:hover { background: var(--accent); color: #000; }
-
-        .input-box { display: none; gap: 10px; } /* Caché par défaut */
-        input {
-            flex-grow: 1; padding: 12px; border-radius: 5px; border: 1px solid #555;
-            background: #222; color: white; outline: none;
-        }
-        .send-btn {
-            background: var(--accent); border: none; padding: 0 20px;
-            border-radius: 5px; cursor: pointer; font-weight: bold; color: #000;
-        }
-
-        /* Loading Dots */
-        .typing { font-style: italic; color: #666; font-size: 0.8rem; margin-left: 10px; display: none;}
-        
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="screen-hub" class="screen active">
-        <div class="hub-header">
+    <div id="validation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Le Grimoire du Projet</h2>
+                <div style="font-size:0.8rem; color:#888;">Validez les tâches pour avancer.</div>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
+                <button class="modal-btn save" onclick="saveSummaryData(false)">💾 Sauvegarder</button>
+                <button id="modal-next-btn" class="modal-btn next" onclick="saveSummaryData(true)">Valider & Étape Suivante ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-hub">
+        <div class="hub-content">
+            <div class="hub-logo"><img src="logoodyssea.jpeg" alt="Logo Odyssea"></div>
             <h1 class="hub-title">Odyssea</h1>
-            <p>Le Voyage du Fou</p>
-        </div>
-        <div class="book-list">
-            <div class="book-card" onclick="startJourney()">
-                <div class="book-title">✨ Nouvelle Odyssée</div>
-                <div class="book-meta">Démarrer le cycle</div>
+            <div class="hub-subtitle">De l'idée à son incarnation dans le Monde</div>
+            <div class="hub-actions">
+                <button class="hub-btn" onclick="triggerImport()">📥 Importer Sauvegarde</button>
+                <button class="hub-btn" onclick="exportData()">💾 Exporter mes Parties</button>
+                <input type="file" id="import-file" style="display:none" onchange="handleImport(this)">
             </div>
-            <div class="book-card" style="opacity: 0.5;">
-                <div class="book-title">Livre Tarot</div>
-                <div class="book-meta">II. Papesse (En pause)</div>
+            <div class="hub-grid">
+                <div class="hub-card new" onclick="createNewGame()"><span>+</span><h3>Nouvelle Aventure</h3><p>Débuter un nouveau projet</p></div>
+                <div id="hub-list" style="display:contents;"></div>
             </div>
         </div>
     </div>
 
-    <div id="screen-game" class="screen">
-        
-        <div class="video-zone" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/de/RWS_Tarot_01_Magician.jpg');">
-            <div class="video-overlay">
-                <h2 style="margin:0; color:var(--accent);">I. LE BATELEUR</h2>
-                <button class="choice-btn" style="margin-top:10px; text-align:center;" onclick="playAudio(introText, this)">
-                    ▶ Écouter l'Arcane
-                </button>
+    <div id="screen-game" class="app-container" style="display:none;">
+        <aside class="sidebar">
+            <div class="brand" onclick="goHome()">
+                <div class="logo-wrapper" style="width:50px; height:50px;"><img src="logoodyssea.jpeg" class="logo-img"></div>
             </div>
-        </div>
-
-        <div class="chat-zone" id="chat-container">
+            <ul class="nav-list" id="arcana-list"></ul>
+            <div class="sidebar-footer">
+                <button class="export-sidebar-btn" onclick="generatePDFReport()">📄 Exporter Rapport PDF</button>
             </div>
-        <div class="typing" id="typing-indicator">Le Bateleur réfléchit...</div>
+        </aside>
 
-        <div class="interaction-zone">
-            <div class="choices-box" id="choices-container">
+        <section class="avatar-column">
+            <div class="video-wrapper">
+                <div class="video-container">
+                    <video id="avatar-video" class="avatar-video" playsinline onclick="videoControl('toggle')"></video>
                 </div>
-            
-            <div class="input-box" id="input-container">
-                <input type="text" id="user-input" placeholder="Parle au Bateleur..." onkeypress="handleEnter(event)">
-                <button class="send-btn" onclick="sendMessage()">→</button>
+                <div class="video-controls-bar">
+                    <button class="control-btn" onclick="videoControl('replay')">↺</button>
+                    <button class="control-btn" id="vid-play-btn" onclick="videoControl('toggle')">▶</button>
+                    <button class="control-btn" onclick="videoControl('stop')">■</button>
+                </div>
             </div>
-        </div>
+            <div id="card-portrait" class="card-info-panel">
+                </div>
+        </section>
 
-        <audio id="audio-player" style="display:none;"></audio>
+        <section class="chat-column">
+            <div class="chat-scroll-area" id="chat-container"></div>
+            <div id="typing-indicator" class="typing-indicator">...</div>
+            <div class="interaction-bar">
+                <div class="input-wrapper">
+                    <div id="api-status" class="api-status-dot" title="Statut Connexion API"></div>
+                    <input type="text" id="user-input" class="chat-input" placeholder="Parle de ton projet..." onkeypress="handleEnter(event)">
+                    <button id="lightning-btn" class="force-btn" onclick="openValidationModal('analysis')" title="Disponible après 2 échanges">⚡</button>
+                    <button class="send-btn" onclick="sendMessage()">→</button>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <script>
-        // --- CONFIGURATION ---
-        const VOICE_ID = "MXfUkZPluASzWMk0xEay"; // Ta voix personnalisée
-        const introText = "Salut voyageur. Tout est sur ma table. Le potentiel est infini. Mais pour commencer, il faut choisir UNE direction. Dis-moi, quelle énergie t'amène ici aujourd'hui ?";
-
-        // Prompt Système (Le Cerveau)
-        const systemPrompt = `
-        Tu es l'Arcane I du Tarot : Le Bateleur.
-        TON ROLE : Initier le voyageur. Tu es dynamique, vif, un peu magicien.
-        TA MISSION ACTUELLE : Aider l'utilisateur à choisir UN projet ou un thème pour son voyage de 22 étapes.
-        CONSIGNES :
-        1. Sois bref et percutant (max 2-3 phrases).
-        2. Ne donne pas de conseils "coaching" plats. Sois mystérieux et inspirant.
-        3. Si l'utilisateur choisit une voie, valide-la avec enthousiasme et demande-lui de préciser.
-        `;
-
-        let chatHistory = []; // Mémoire de la conversation
-
-        // --- NAVIGATION ---
-        function startJourney() {
-            document.getElementById('screen-hub').classList.remove('active');
-            document.getElementById('screen-game').classList.add('active');
-            
-            // Initialiser le chat avec l'intro
-            addAiMessage(introText);
-            
-            // Afficher les choix de départ
-            const choices = [
-                "Je veux lancer un PROJET concret (Manifestation)",
-                "Je veux GUÉRIR une relation ou une émotion",
-                "Je suis PERDU, je cherche du sens"
-            ];
-            showChoices(choices);
-        }
-
-        // --- INTERFACE ---
-        function addAiMessage(text) {
-            const container = document.getElementById('chat-container');
-            
-            const row = document.createElement('div');
-            row.className = 'message-row';
-            
-            // Bulle texte
-            const bubble = document.createElement('div');
-            bubble.className = 'message ai-msg';
-            bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Markdown gras
-            
-            // Bouton Audio
-            const btn = document.createElement('button');
-            btn.className = 'audio-btn';
-            btn.innerHTML = '🔊';
-            btn.onclick = function() { playAudio(text, this); };
-            
-            row.appendChild(bubble);
-            row.appendChild(btn);
-            
-            container.appendChild(row);
-            container.scrollTop = container.scrollHeight;
-            
-            // Ajouter à l'historique pour Gemini
-            chatHistory.push({ role: "model", parts: [{ text: text }] });
-        }
-
-        function addUserMessage(text) {
-            const container = document.getElementById('chat-container');
-            const row = document.createElement('div');
-            row.className = 'message-row user';
-            
-            const bubble = document.createElement('div');
-            bubble.className = 'message user-msg';
-            bubble.innerText = text;
-            
-            row.appendChild(bubble);
-            container.appendChild(row);
-            container.scrollTop = container.scrollHeight;
-
-            // Ajouter à l'historique pour Gemini
-            chatHistory.push({ role: "user", parts: [{ text: text }] });
-        }
-
-        function showChoices(options) {
-            const box = document.getElementById('choices-container');
-            box.innerHTML = '';
-            box.style.display = 'flex';
-            document.getElementById('input-container').style.display = 'none';
-
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'choice-btn';
-                btn.innerText = "✦ " + opt;
-                btn.onclick = () => handleChoice(opt);
-                box.appendChild(btn);
-            });
-        }
-
-        function enableTextInput() {
-            document.getElementById('choices-container').style.display = 'none';
-            document.getElementById('input-container').style.display = 'flex';
-            document.getElementById('user-input').focus();
-        }
-
-        // --- LOGIQUE JEU ---
-        async function handleChoice(text) {
-            // L'utilisateur a cliqué un bouton -> On traite ça comme un message
-            addUserMessage(text);
-            document.getElementById('choices-container').style.display = 'none';
-            
-            // On appelle Gemini pour la suite
-            await callGemini();
-            
-            // Après le premier choix, on passe en mode chat libre
-            enableTextInput();
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if (!text) return;
-            
-            input.value = '';
-            addUserMessage(text);
-            await callGemini();
-        }
-
-        function handleEnter(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        // --- BACKEND CALLS (LE VRAI CERVEAU) ---
-        
-        async function callGemini() {
-            const indicator = document.getElementById('typing-indicator');
-            indicator.style.display = 'block';
-
-            try {
-                // Construction du payload pour l'API
-                // On n'envoie pas tout l'historique si c'est trop long, 
-                // mais pour le prototype on envoie tout pour garder le contexte.
-                
-                const response = await fetch('/.netlify/functions/api-gemini', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        systemPrompt: systemPrompt,
-                        // On reconstruit le format attendu par api-gemini.js
-                        // Note: api-gemini.js attendait un "message" unique dans la V1 simple,
-                        // mais on va feinter en envoyant le dernier message de l'user
-                        // et en gérant l'historique côté serveur si on voulait faire pro.
-                        // POUR CE PROTOTYPE SIMPLIFIÉ : On envoie tout le contexte concaténé dans le prompt.
-                        
-                        message: chatHistory[chatHistory.length - 1].parts[0].text,
-                        
-                        // Astuce : On injecte l'historique précédent dans le prompt système pour que Gemini s'en souvienne
-                        // sans modifier l'architecture backend complexe.
-                        fullHistory: chatHistory 
-                    })
-                });
-
-                const data = await response.json();
-                indicator.style.display = 'none';
-
-                if (data.reply) {
-                    addAiMessage(data.reply);
-                } else if (data.error) {
-                    addAiMessage("⚠️ Le Bateleur a un trou de mémoire : " + data.error);
-                }
-
-            } catch (err) {
-                indicator.style.display = 'none';
-                addAiMessage("⚠️ Erreur de connexion au temple.");
-                console.error(err);
-            }
-        }
-
-        async function playAudio(textToSpeak, btnElement) {
-            if (btnElement.classList.contains('loading')) return;
-            
-            btnElement.classList.add('loading');
-            
-            try {
-                const response = await fetch('/.netlify/functions/api-voice', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        text: textToSpeak,
-                        voiceId: VOICE_ID // Ta voix perso
-                    })
-                });
-
-                const data = await response.json();
-                btnElement.classList.remove('loading');
-
-                if (data.audioContent) {
-                    const audio = document.getElementById('audio-player');
-                    audio.src = "data:audio/mpeg;base64," + data.audioContent;
-                    audio.play();
-                } else {
-                    alert("Erreur voix : " + (data.error || "Inconnue"));
-                }
-
-            } catch (err) {
-                btnElement.classList.remove('loading');
-                console.error(err);
-                alert("Impossible de générer la voix.");
-            }
-        }
-
-    </script>
+    <audio id="tts-player"></audio>
+    <script src="script.js"></script>
 </body>
 </html>
