@@ -1,21 +1,4 @@
-window.onerror = function(message, source, lineno, colno, error) {
-    const errorBox = document.createElement('div');
-    errorBox.style.position = 'fixed';
-    errorBox.style.top = '0';
-    errorBox.style.left = '0';
-    errorBox.style.width = '100%';
-    errorBox.style.background = 'red';
-    errorBox.style.color = 'white';
-    errorBox.style.padding = '20px';
-    errorBox.style.zIndex = '9999';
-    errorBox.style.fontSize = '14px';
-    errorBox.innerHTML = "ERREUR : " + message + "<br>Ligne : " + lineno;
-    
-    document.body.appendChild(errorBox);
-    return false;
-};
-
-let GLOBAL_TAROT_DATA = null; 
+        let GLOBAL_TAROT_DATA = null; 
         const STORAGE_KEY = 'odyssea_saves_v16_final_polished';
         
         let sessionList = [];
@@ -107,89 +90,24 @@ let GLOBAL_TAROT_DATA = null;
             reader.readAsText(file); input.value = '';
         }
 
-function renderHub() {
-    const listEl = document.getElementById('hub-list'); 
-    listEl.innerHTML = '';
-    
-    sessionList.forEach(session => {
-        const card = document.createElement('div'); 
-        card.className = 'hub-card';
-        
-        // Clic principal sur la carte = Charger le jeu
-        card.onclick = () => loadGame(session.id);
-        
-        // Bouton Supprimer (Croix)
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-card-btn'; 
-        delBtn.innerHTML = '×'; 
-        delBtn.title = "Supprimer"; 
-        delBtn.onclick = (e) => { 
-            e.stopPropagation(); // Empêche de lancer le jeu quand on clique sur supprimer
-            deleteSession(session.id); 
-        };
-        
-        // Bouton Renommer (Crayon) - NOUVEAU
-        const renameBtn = document.createElement('button');
-        renameBtn.className = 'rename-card-btn';
-        renameBtn.innerHTML = '✏️'; 
-        renameBtn.title = "Renommer";
-        renameBtn.onclick = (e) => {
-            e.stopPropagation(); // Empêche de lancer le jeu
-            renameSessionFromHub(session.id);
-        };
-        
-        // Contenu de la carte
-        let subText = 'Étape ' + session.currentLevel;
-        if(session.globalSubject) {
-            subText = session.globalSubject.length > 30 ? session.globalSubject.substring(0,30)+'...' : session.globalSubject;
+        function renderHub() {
+            const listEl = document.getElementById('hub-list'); listEl.innerHTML = '';
+            sessionList.forEach(session => {
+                const card = document.createElement('div'); card.className = 'hub-card';
+                card.onclick = () => loadGame(session.id);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-card-btn'; delBtn.innerHTML = '×'; delBtn.title = "Supprimer"; delBtn.onclick = (e) => { e.stopPropagation(); deleteSession(session.id); };
+                card.innerHTML = `<h3>${session.name}</h3><p>${session.globalSubject ? 'Projet: '+session.globalSubject.substring(0,25)+'...' : 'Étape '+session.currentLevel}</p>`;
+                card.appendChild(delBtn); listEl.appendChild(card);
+            });
         }
-        
-        card.innerHTML = `<h3>${session.name}</h3><p>${subText}</p>`;
-        
-        // On ajoute les boutons à la carte
-        card.appendChild(renameBtn);
-        card.appendChild(delBtn); 
-        
-        listEl.appendChild(card);
-    });
-}
 
-// Fonction pour renommer depuis l'accueil
-function renameSessionFromHub(id) {
-    const session = sessionList.find(s => s.id === id);
-    if (!session) return;
-    
-    const newName = prompt("Nouveau nom pour ce projet :", session.name);
-    
-    if (newName && newName.trim() !== "") {
-        session.name = newName.trim();
-        saveAllSessions(); // On sauvegarde dans le stockage
-        renderHub(); // On rafraîchit l'affichage pour voir le nouveau nom
-    }
-}
+        function createNewGame() {
+            const name = prompt("Nom du Projet ?"); if (!name) return;
+            const newSession = { id: Date.now(), name: name, unlockedLevel: 1, currentLevel: 1, globalSubject: "", histories: {}, chapterData: {} };
+            sessionList.push(newSession); saveAllSessions(); loadGame(newSession.id);
+        }
 
-function createNewGame() {
-    // On ne demande plus le nom (ça casse le flux sur mobile)
-    // On génère un nom automatique
-    const date = new Date();
-    const name = "Projet " + date.toLocaleDateString() + " " + date.getHours() + "h" + date.getMinutes();
-    
-    const newSession = { 
-        id: Date.now(), 
-        name: name, 
-        unlockedLevel: 1, 
-        currentLevel: 1, 
-        globalSubject: "", 
-        histories: {}, 
-        chapterData: {} 
-    };
-    
-    sessionList.push(newSession); 
-    saveAllSessions(); 
-    
-    // On lance le chargement directement
-    loadGame(newSession.id);
-}
         function loadGame(sessionId) {
             currentSessionId = sessionId; gameState = sessionList.find(s => s.id === sessionId);
             if(!gameState.histories) gameState.histories = {};
@@ -227,87 +145,18 @@ function createNewGame() {
             });
         }
 
-function startLevel(level, manualSwitch) {
-    gameState.currentLevel = level;
-    
-    // --- CORRECTIF MENU MOBILE ---
-    // Dès qu'on clique sur un niveau, on force la fermeture du menu
-    const sidebar = document.querySelector('.sidebar');
-    const btn = document.getElementById('mobile-menu-btn');
-    if (sidebar) {
-        sidebar.classList.remove('active'); // On enlève la classe qui l'affiche
-        sidebar.style.display = ""; // On reset le style pour laisser le CSS gérer
-    }
-    if (btn) {
-        btn.innerHTML = "☰"; // On remet l'icône burger
-        btn.style.zIndex = "100";
-    }
-    // -----------------------------
-    
-    renderSidebar(); 
-    stopChatAudio(); 
-    checkLightningStatus();
-    
-    // Gestion vidéo (Mobile safe)
-    videoEl.src = `videos/${level}.mp4`; 
-    videoEl.muted = false;
-    
-    const playPromise = videoEl.play();
-    if (playPromise !== undefined) {
-        playPromise.then(_ => { updateVidBtn(true); })
-        .catch(error => { 
-            videoEl.muted = true; 
-            updateVidBtn(false); 
-        });
-    }
-    
-    if (!gameState.histories[level]) {
-        gameState.histories[level] = []; 
-        const card = getCardData(level);
-        if (card && card["TEXTE INTRO"]) {
-            gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+        function startLevel(level, manualSwitch) {
+            gameState.currentLevel = level; renderSidebar(); stopChatAudio(); checkLightningStatus();
+            videoEl.muted = false; videoEl.volume = 1.0; videoEl.src = `videos/${level}.mp4`; 
+            const playPromise = videoEl.play();
+            if (playPromise !== undefined) { playPromise.then(_ => { updateVidBtn(true); }).catch(error => { updateVidBtn(false); }); }
+            if (!gameState.histories[level]) {
+                gameState.histories[level] = []; const card = getCardData(level);
+                if (card && card["TEXTE INTRO"]) gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+            }
+            renderChat(gameState.histories[level]); renderCardInfo(level); saveCurrentState();
         }
-    }
-    renderChat(gameState.histories[level]); 
-    renderCardInfo(level); 
-    saveCurrentState();
-}    
-    renderSidebar(); 
-    stopChatAudio(); 
-    checkLightningStatus();
-    
-    // Gestion Sécurisée de la Vidéo pour Mobile
-    videoEl.src = `videos/${level}.mp4`; 
-    videoEl.muted = false; // On tente avec le son...
-    
-    const playPromise = videoEl.play();
-    
-    if (playPromise !== undefined) {
-        playPromise.then(_ => {
-            // Ça a marché (Ordi ou Android permissif)
-            updateVidBtn(true);
-        })
-        .catch(error => {
-            // Ça a bloqué (iPhone / Mobile strict)
-            console.log("Lecture auto bloquée (normal sur mobile) :", error);
-            // On ne fait rien de grave, on met juste le bouton en "Pause"
-            videoEl.muted = true; // Parfois ça aide de passer en muet
-            updateVidBtn(false); 
-        });
-    }
-    
-    // Le reste du code continue même si la vidéo a échoué !
-    if (!gameState.histories[level]) {
-        gameState.histories[level] = []; 
-        const card = getCardData(level);
-        if (card && card["TEXTE INTRO"]) {
-            gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
-        }
-    }
-    renderChat(gameState.histories[level]); 
-    renderCardInfo(level); 
-    saveCurrentState();
-}
+
         // --- LOGIQUE BULLES/CHIPS ET COULEURS ---
         function parseKeywords(text) {
             if (!text) return [];
@@ -593,140 +442,3 @@ function startLevel(level, manualSwitch) {
         function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
         function toRoman(n) { const r=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII"]; return r[n]||n; }
         function setApiStatus(s) { statusDot.className = 'api-status-dot ' + s; }
-        
-            // --- GESTION MENU MOBILE ---
-            function toggleMobileMenu() {
-                const sidebar = document.querySelector('.sidebar');
-                const btn = document.getElementById('mobile-menu-btn');
-                
-                // On bascule la classe 'active'
-                sidebar.classList.toggle('active');
-                
-                // On change l'icône du bouton (☰ ou ×)
-                if (sidebar.classList.contains('active')) {
-                    btn.innerHTML = "×"; // Croix pour fermer
-                    btn.style.zIndex = "201"; // Passe au-dessus du menu
-                } else {
-                    btn.innerHTML = "☰"; // Burger pour ouvrir
-                    btn.style.zIndex = "100";
-                }
-            }
-            
-            // Optionnel : Fermer le menu quand on clique sur un lien de navigation
-            // Ajoute ceci pour que le menu se ferme automatiquement après avoir choisi une étape
-            document.getElementById('arcana-list').addEventListener('click', (e) => {
-                if(window.innerWidth <= 900) {
-                    // Si on a cliqué sur un élément de liste ou un bouton
-                    if(e.target.closest('.nav-item') || e.target.closest('button')) {
-                        toggleMobileMenu(); // On referme
-                    }
-                }
-            });
-            
-            // --- SYSTÈME DE RENOMMAGE (POP-UP MAISON) ---
-            
-            // 1. La fonction appelée quand tu cliques sur le crayon
-            function renameSessionFromHub(id) {
-                const session = sessionList.find(s => s.id === id);
-                if (!session) return;
-                
-                // Au lieu de prompt(), on lance notre pop-up personnalisée
-                createCustomInput("Renommer le projet", session.name, (newName) => {
-                    if (newName && newName.trim() !== "") {
-                        session.name = newName.trim();
-                        saveAllSessions();
-                        renderHub(); // Mise à jour immédiate
-                    }
-                });
-            }
-            
-            // 2. La machine à fabriquer la fenêtre (Fonction utilitaire)
-            function createCustomInput(title, defaultValue, callback) {
-                // Création du fond noir
-                const overlay = document.createElement('div');
-                overlay.style.position = 'fixed';
-                overlay.style.top = '0'; overlay.style.left = '0';
-                overlay.style.width = '100%'; overlay.style.height = '100%';
-                overlay.style.background = 'rgba(0,0,0,0.85)';
-                overlay.style.zIndex = '10000'; // Très haut pour être sûr
-                overlay.style.display = 'flex';
-                overlay.style.alignItems = 'center';
-                overlay.style.justifyContent = 'center';
-                overlay.style.backdropFilter = 'blur(5px)';
-                
-                // Création de la boîte de dialogue
-                const box = document.createElement('div');
-                box.style.background = '#111';
-                box.style.border = '1px solid #d4af37';
-                box.style.padding = '25px';
-                box.style.borderRadius = '12px';
-                box.style.width = '85%';
-                box.style.maxWidth = '400px';
-                box.style.textAlign = 'center';
-                box.style.boxShadow = '0 0 30px rgba(212,175,55,0.3)';
-                
-                // Titre
-                const titleEl = document.createElement('h3');
-                titleEl.innerText = title;
-                titleEl.style.color = '#d4af37';
-                titleEl.style.marginTop = '0';
-                titleEl.style.fontFamily = 'Cinzel, serif';
-                
-                // Champ texte
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = defaultValue;
-                input.style.width = '100%';
-                input.style.padding = '10px';
-                input.style.marginTop = '15px';
-                input.style.marginBottom = '20px';
-                input.style.background = '#222';
-                input.style.border = '1px solid #444';
-                input.style.color = '#fff';
-                input.style.fontSize = '1.1rem';
-                input.style.borderRadius = '6px';
-                
-                // Boutons Container
-                const btnContainer = document.createElement('div');
-                btnContainer.style.display = 'flex';
-                btnContainer.style.gap = '10px';
-                
-                // Bouton Annuler
-                const cancelBtn = document.createElement('button');
-                cancelBtn.innerText = "Annuler";
-                cancelBtn.style.flex = '1';
-                cancelBtn.style.padding = '10px';
-                cancelBtn.style.background = 'transparent';
-                cancelBtn.style.border = '1px solid #666';
-                cancelBtn.style.color = '#888';
-                cancelBtn.style.borderRadius = '6px';
-                cancelBtn.onclick = () => document.body.removeChild(overlay);
-                
-                // Bouton Valider
-                const saveBtn = document.createElement('button');
-                saveBtn.innerText = "Valider";
-                saveBtn.style.flex = '1';
-                saveBtn.style.padding = '10px';
-                saveBtn.style.background = '#d4af37';
-                saveBtn.style.border = 'none';
-                saveBtn.style.color = '#000';
-                saveBtn.style.fontWeight = 'bold';
-                saveBtn.style.borderRadius = '6px';
-                
-                saveBtn.onclick = () => {
-                    callback(input.value); // On renvoie la valeur
-                    document.body.removeChild(overlay); // On ferme
-                };
-                
-                // Assemblage
-                btnContainer.appendChild(cancelBtn);
-                btnContainer.appendChild(saveBtn);
-                box.appendChild(titleEl);
-                box.appendChild(input);
-                box.appendChild(btnContainer);
-                overlay.appendChild(box);
-                document.body.appendChild(overlay);
-                
-                // Focus automatique sur le champ (pour ouvrir le clavier)
-                setTimeout(() => input.focus(), 100);
-            }
