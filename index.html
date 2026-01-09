@@ -15,7 +15,9 @@
 </head>
 <body>
 
-    <button id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    <button id="mobile-menu-btn" onclick="toggleSidebar()" style="display:none;">☰</button>
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;"></div>
 
     <div id="validation-modal" class="modal">
         <div class="modal-content">
@@ -33,7 +35,7 @@
     </div>
 
     <div id="game-input-modal" class="modal" style="z-index: 200;">
-        <div class="modal-content" style="max-height: 300px;">
+        <div class="modal-content" style="max-height: 300px; height: auto;">
             <div class="modal-header">
                 <h2 id="input-modal-title">Nouvelle Aventure</h2>
             </div>
@@ -65,6 +67,7 @@
     </div>
 
     <div id="screen-game" class="app-container" style="display:none;">
+        
         <aside class="sidebar" id="main-sidebar">
             <div class="brand" onclick="goHome()">
                 <div class="logo-wrapper" style="width:50px; height:50px;"><img src="logoodyssea.jpeg" class="logo-img"></div>
@@ -75,13 +78,11 @@
                 <button class="export-sidebar-btn" onclick="generatePDFReport()">📄 Exporter Rapport PDF</button>
             </div>
         </aside>
-        
-        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <section class="avatar-column">
             <button id="toggle-video-size-btn" onclick="toggleVideoSize()">↕</button>
             
-            <div class="video-wrapper" id="video-wrapper-box">
+            <div class="video-wrapper">
                 <div class="video-container">
                     <video id="avatar-video" class="avatar-video" playsinline onclick="videoControl('toggle')"></video>
                 </div>
@@ -110,6 +111,7 @@
     </div>
 
     <audio id="tts-player"></audio>
+    
     <script src="script.js"></script>
 </body>
 </html>
