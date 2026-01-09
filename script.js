@@ -442,3 +442,32 @@
         function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
         function toRoman(n) { const r=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII"]; return r[n]||n; }
         function setApiStatus(s) { statusDot.className = 'api-status-dot ' + s; }
+        
+            // --- GESTION MENU MOBILE ---
+            function toggleMobileMenu() {
+                const sidebar = document.querySelector('.sidebar');
+                const btn = document.getElementById('mobile-menu-btn');
+                
+                // On bascule la classe 'active'
+                sidebar.classList.toggle('active');
+                
+                // On change l'icône du bouton (☰ ou ×)
+                if (sidebar.classList.contains('active')) {
+                    btn.innerHTML = "×"; // Croix pour fermer
+                    btn.style.zIndex = "201"; // Passe au-dessus du menu
+                } else {
+                    btn.innerHTML = "☰"; // Burger pour ouvrir
+                    btn.style.zIndex = "100";
+                }
+            }
+            
+            // Optionnel : Fermer le menu quand on clique sur un lien de navigation
+            // Ajoute ceci pour que le menu se ferme automatiquement après avoir choisi une étape
+            document.getElementById('arcana-list').addEventListener('click', (e) => {
+                if(window.innerWidth <= 900) {
+                    // Si on a cliqué sur un élément de liste ou un bouton
+                    if(e.target.closest('.nav-item') || e.target.closest('button')) {
+                        toggleMobileMenu(); // On referme
+                    }
+                }
+            });
