@@ -320,3 +320,43 @@ em { color: #bbb; font-style: italic; }
 @media (min-width: 901px) {
     .mobile-menu-btn { display: none; }
 }
+
+/* --- CORRECTIFS UX & MOBILE --- */
+
+/* 1. Sécurité : Si le jeu doit être caché (style="display:none"), on le force à rester caché
+   même si le CSS mobile essaie de le montrer. */
+#screen-game[style*="none"] {
+    display: none !important;
+}
+
+/* 2. Logo : On ajoute de l'air en haut sur mobile */
+@media (max-width: 900px) {
+    .hub-content {
+        padding-top: 40px; /* Évite que le logo soit coupé par l'encoche de l'iPhone */
+        padding-bottom: 80px; /* Évite que le bas soit caché */
+    }
+    
+    /* On s'assure que le Hub prend bien tout l'écran */
+    #screen-hub {
+        height: 100vh;
+        overflow-y: auto; /* Permet de scroller si l'écran est petit */
+    }
+}
+
+/* 3. Style du bouton Renommer sur la carte (Accueil) */
+.rename-card-btn {
+    position: absolute;
+    top: 10px;
+    right: 40px; /* Juste à gauche de la croix de suppression */
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 5;
+    transition: 0.2s;
+}
+.rename-card-btn:hover {
+    color: var(--accent-gold);
+    transform: scale(1.1);
+}
