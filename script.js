@@ -107,17 +107,66 @@ let GLOBAL_TAROT_DATA = null;
             reader.readAsText(file); input.value = '';
         }
 
-        function renderHub() {
-            const listEl = document.getElementById('hub-list'); listEl.innerHTML = '';
-            sessionList.forEach(session => {
-                const card = document.createElement('div'); card.className = 'hub-card';
-                card.onclick = () => loadGame(session.id);
-                const delBtn = document.createElement('button');
-                delBtn.className = 'delete-card-btn'; delBtn.innerHTML = '×'; delBtn.title = "Supprimer"; delBtn.onclick = (e) => { e.stopPropagation(); deleteSession(session.id); };
-                card.innerHTML = `<h3>${session.name}</h3><p>${session.globalSubject ? 'Projet: '+session.globalSubject.substring(0,25)+'...' : 'Étape '+session.currentLevel}</p>`;
-                card.appendChild(delBtn); listEl.appendChild(card);
-            });
+function renderHub() {
+    const listEl = document.getElementById('hub-list'); 
+    listEl.innerHTML = '';
+    
+    sessionList.forEach(session => {
+        const card = document.createElement('div'); 
+        card.className = 'hub-card';
+        
+        // Clic principal sur la carte = Charger le jeu
+        card.onclick = () => loadGame(session.id);
+        
+        // Bouton Supprimer (Croix)
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-card-btn'; 
+        delBtn.innerHTML = '×'; 
+        delBtn.title = "Supprimer"; 
+        delBtn.onclick = (e) => { 
+            e.stopPropagation(); // Empêche de lancer le jeu quand on clique sur supprimer
+            deleteSession(session.id); 
+        };
+        
+        // Bouton Renommer (Crayon) - NOUVEAU
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'rename-card-btn';
+        renameBtn.innerHTML = '✏️'; 
+        renameBtn.title = "Renommer";
+        renameBtn.onclick = (e) => {
+            e.stopPropagation(); // Empêche de lancer le jeu
+            renameSessionFromHub(session.id);
+        };
+        
+        // Contenu de la carte
+        let subText = 'Étape ' + session.currentLevel;
+        if(session.globalSubject) {
+            subText = session.globalSubject.length > 30 ? session.globalSubject.substring(0,30)+'...' : session.globalSubject;
         }
+        
+        card.innerHTML = `<h3>${session.name}</h3><p>${subText}</p>`;
+        
+        // On ajoute les boutons à la carte
+        card.appendChild(renameBtn);
+        card.appendChild(delBtn); 
+        
+        listEl.appendChild(card);
+    });
+}
+
+// Fonction pour renommer depuis l'accueil
+function renameSessionFromHub(id) {
+    const session = sessionList.find(s => s.id === id);
+    if (!session) return;
+    
+    const newName = prompt("Nouveau nom pour ce projet :", session.name);
+    
+    if (newName && newName.trim() !== "") {
+        session.name = newName.trim();
+        saveAllSessions(); // On sauvegarde dans le stockage
+        renderHub(); // On rafraîchit l'affichage pour voir le nouveau nom
+    }
+}
 
 function createNewGame() {
     // On ne demande plus le nom (ça casse le flux sur mobile)
