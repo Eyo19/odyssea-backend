@@ -365,3 +365,50 @@ em { color: #bbb; font-style: italic; }
     color: #000;
     border-color: var(--accent-gold);
 }
+
+/* --- CORRECTIFS FINAUX (MODALE & GRIMOIRE) --- */
+@media (max-width: 900px) {
+    
+    /* 1. Réparation des boutons jaunes qui dépassent (Empilement) */
+    .modal-footer {
+        flex-direction: column-reverse !important; /* Boutons les uns sur les autres */
+        gap: 15px !important;
+        padding-bottom: 20px !important;
+        height: auto !important;
+    }
+    
+    .modal-btn {
+        width: 100% !important; /* Pleine largeur */
+        margin: 0 !important;
+        padding: 15px !important;
+    }
+    
+    /* On agrandit la fenêtre pour qu'elle soit confortable */
+    .modal-content {
+        width: 95% !important;
+        height: 92vh !important;
+        margin: 4vh auto !important;
+    }
+    
+    /* 2. Style du bouton Parchemin (Haut Droite) */
+    .mobile-grimoire-btn {
+        display: block !important; /* Force l'affichage */
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+        z-index: 100;
+        background: rgba(0,0,0,0.6); 
+        width: 40px; height: 40px;
+        border: 1px solid #d4af37; 
+        color: #fff; 
+        border-radius: 8px;
+        font-size: 1.5rem; 
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+    }
+}
+
+/* Sur PC, on cache ce bouton */
+@media (min-width: 901px) {
+    .mobile-grimoire-btn { display: none !important; }
+}
