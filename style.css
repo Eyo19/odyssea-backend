@@ -412,3 +412,46 @@ em { color: #bbb; font-style: italic; }
 @media (min-width: 901px) {
     .mobile-grimoire-btn { display: none !important; }
 }
+
+/* --- ULTIME CORRECTIF MOBILE (21h) --- */
+@media (max-width: 900px) {
+    
+    /* 1. FORCE L'AFFICHAGE DU BOUTON PARCHEMIN */
+    #mobile-grimoire-btn {
+        display: flex !important; /* Force l'apparition */
+        align-items: center; justify-content: center;
+        position: absolute; top: 10px; right: 10px; z-index: 200;
+        background: rgba(0,0,0,0.6); width: 40px; height: 40px;
+        border: 1px solid #d4af37; color: #fff; border-radius: 8px; font-size: 1.5rem;
+    }
+    
+    /* 2. FENÊTRE D'ANALYSE (MODALE) LISIBLE AVEC ASCENSEUR */
+    .modal-content {
+        height: 90vh !important; /* Prend presque tout l'écran */
+        margin: 5vh auto !important; /* Centré */
+        display: flex !important;
+        flex-direction: column !important; /* Empile Header - Corps - Footer */
+    }
+    
+    .modal-header {
+        flex-shrink: 0; /* Ne rétrécit jamais */
+    }
+    
+    .modal-body {
+        flex-grow: 1 !important; /* Prend toute la place disponible au milieu */
+        overflow-y: auto !important; /* AJOUTE L'ASCENSEUR ICI */
+        height: auto !important;
+        padding-bottom: 20px;
+    }
+    
+    .modal-footer {
+        flex-shrink: 0; /* Ne rétrécit jamais */
+        background: #111; /* Fond opaque pour bien voir les boutons */
+        border-top: 1px solid #333;
+        flex-direction: column-reverse !important; /* Boutons empilés */
+        padding: 15px !important;
+        gap: 10px !important;
+    }
+    
+    .modal-btn { padding: 15px !important; width: 100% !important; margin: 0 !important; }
+}
