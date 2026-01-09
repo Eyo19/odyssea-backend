@@ -230,19 +230,48 @@ function createNewGame() {
 function startLevel(level, manualSwitch) {
     gameState.currentLevel = level;
     
-    // Si on est sur mobile, on ferme le menu après avoir cliqué
-    if (window.innerWidth <= 900) {
-        const sidebar = document.querySelector('.sidebar');
-        const btn = document.getElementById('mobile-menu-btn');
-        if (sidebar && sidebar.classList.contains('active')) {
-            sidebar.classList.remove('active');
-            if(btn) {
-                btn.innerHTML = "☰";
-                btn.style.zIndex = "100";
-            }
-        }
+    // --- CORRECTIF MENU MOBILE ---
+    // Dès qu'on clique sur un niveau, on force la fermeture du menu
+    const sidebar = document.querySelector('.sidebar');
+    const btn = document.getElementById('mobile-menu-btn');
+    if (sidebar) {
+        sidebar.classList.remove('active'); // On enlève la classe qui l'affiche
+        sidebar.style.display = ""; // On reset le style pour laisser le CSS gérer
+    }
+    if (btn) {
+        btn.innerHTML = "☰"; // On remet l'icône burger
+        btn.style.zIndex = "100";
+    }
+    // -----------------------------
+    
+    renderSidebar(); 
+    stopChatAudio(); 
+    checkLightningStatus();
+    
+    // Gestion vidéo (Mobile safe)
+    videoEl.src = `videos/${level}.mp4`; 
+    videoEl.muted = false;
+    
+    const playPromise = videoEl.play();
+    if (playPromise !== undefined) {
+        playPromise.then(_ => { updateVidBtn(true); })
+        .catch(error => { 
+            videoEl.muted = true; 
+            updateVidBtn(false); 
+        });
     }
     
+    if (!gameState.histories[level]) {
+        gameState.histories[level] = []; 
+        const card = getCardData(level);
+        if (card && card["TEXTE INTRO"]) {
+            gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+        }
+    }
+    renderChat(gameState.histories[level]); 
+    renderCardInfo(level); 
+    saveCurrentState();
+}    
     renderSidebar(); 
     stopChatAudio(); 
     checkLightningStatus();
