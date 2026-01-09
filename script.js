@@ -1,4 +1,21 @@
-        let GLOBAL_TAROT_DATA = null; 
+window.onerror = function(message, source, lineno, colno, error) {
+    const errorBox = document.createElement('div');
+    errorBox.style.position = 'fixed';
+    errorBox.style.top = '0';
+    errorBox.style.left = '0';
+    errorBox.style.width = '100%';
+    errorBox.style.background = 'red';
+    errorBox.style.color = 'white';
+    errorBox.style.padding = '20px';
+    errorBox.style.zIndex = '9999';
+    errorBox.style.fontSize = '14px';
+    errorBox.innerHTML = "ERREUR : " + message + "<br>Ligne : " + lineno;
+    
+    document.body.appendChild(errorBox);
+    return false;
+};
+
+let GLOBAL_TAROT_DATA = null; 
         const STORAGE_KEY = 'odyssea_saves_v16_final_polished';
         
         let sessionList = [];
@@ -102,12 +119,28 @@
             });
         }
 
-        function createNewGame() {
-            const name = prompt("Nom du Projet ?"); if (!name) return;
-            const newSession = { id: Date.now(), name: name, unlockedLevel: 1, currentLevel: 1, globalSubject: "", histories: {}, chapterData: {} };
-            sessionList.push(newSession); saveAllSessions(); loadGame(newSession.id);
-        }
-
+function createNewGame() {
+    // On ne demande plus le nom (ça casse le flux sur mobile)
+    // On génère un nom automatique
+    const date = new Date();
+    const name = "Projet " + date.toLocaleDateString() + " " + date.getHours() + "h" + date.getMinutes();
+    
+    const newSession = { 
+        id: Date.now(), 
+        name: name, 
+        unlockedLevel: 1, 
+        currentLevel: 1, 
+        globalSubject: "", 
+        histories: {}, 
+        chapterData: {} 
+    };
+    
+    sessionList.push(newSession); 
+    saveAllSessions(); 
+    
+    // On lance le chargement directement
+    loadGame(newSession.id);
+}
         function loadGame(sessionId) {
             currentSessionId = sessionId; gameState = sessionList.find(s => s.id === sessionId);
             if(!gameState.histories) gameState.histories = {};
