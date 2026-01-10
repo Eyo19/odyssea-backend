@@ -1,16 +1,18 @@
-// netlify/functions/api-gemini.js
 // Version robuste : ListModels + fallback v1/v1beta + erreurs propres
+// Ce script choisit automatiquement le modèle le plus intelligent disponible pour ta clé.
 
 const https = require("https");
 
-// Ordre de préférence (on ne les utilisera que s’ils existent réellement)
+// Ordre de préférence (Du plus intelligent/récent au plus basique)
+// J'ai ajouté les modèles V3 et V2 que nous avons vus dans ta liste
 const PREFERRED_MODELS = [
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-2.0-pro",
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-pro",
+  "gemini-3-pro-preview",       // LE TOP DU TOP (Janvier 2026)
+  "gemini-3-flash-preview",     // Ultra rapide V3
+  "gemini-2.0-flash",           // Le standard très stable V2
+  "gemini-2.0-flash-exp",       // Expérimental V2
+  "gemini-1.5-pro",             // L'ancien "Cerveau" (très fiable)
+  "gemini-1.5-flash",           // L'ancien rapide
+  "gemini-pro",                 // Le fallback ultime
 ];
 
 // Timeouts simples (évite les functions pendues)
@@ -166,7 +168,7 @@ function buildGeminiPayload({ message, fullHistory, systemPrompt }) {
 
 exports.handler = async (event) => {
   try {
-    console.log("--- GEMINI FUNCTION ---");
+    console.log("--- GEMINI FUNCTION (AUTO-DETECT MODE) ---");
 
     // 1) API KEY
     const apiKey = process.env.GEMINI_API_KEY;
@@ -193,8 +195,8 @@ exports.handler = async (event) => {
     const payload = buildGeminiPayload({ message, fullHistory, systemPrompt });
 
     // 3) Détecter versions + modèles disponibles
-    // On tente v1 d’abord, sinon fallback v1beta
-    const versionsToTry = ["v1", "v1beta"];
+    // On tente v1beta d'abord car les modèles preview (V3) sont souvent en beta
+    const versionsToTry = ["v1beta", "v1"];
     let lastListError = null;
 
     for (const apiVersion of versionsToTry) {
@@ -202,12 +204,14 @@ exports.handler = async (event) => {
         console.log(`ListModels via ${apiVersion}...`);
         const availableModels = await listModels(apiKey, apiVersion);
 
-        // Ordre de test = préférences ∩ disponibles, puis (au cas où) le reste
+        // Ordre de test = préférences ∩ disponibles
         const preferred = PREFERRED_MODELS.filter((m) => availableModels.includes(m));
+        
+        // Si aucun modèle préféré n'est trouvé, on prend tout ce qui reste (fallback ultime)
         const remaining = availableModels.filter((m) => !preferred.includes(m));
-        const modelsToTry = [...preferred, ...remaining].slice(0, 12); // limite raisonnable
+        const modelsToTry = [...preferred, ...remaining].slice(0, 5); // On en teste max 5 pour pas que ça dure 10 plombes
 
-        console.log(`Modèles dispo (${apiVersion}) : ${availableModels.length}. Tentatives: ${modelsToTry.join(", ")}`);
+        console.log(`Modèles dispo (${apiVersion}) : ${availableModels.length}. On va tenter dans l'ordre: ${modelsToTry.join(", ")}`);
 
         // 4) Tenter generateContent sur les modèles sélectionnés
         let lastGenError = null;
@@ -224,39 +228,13 @@ exports.handler = async (event) => {
             };
           } catch (err) {
             lastGenError = err;
-
             const code = err?.statusCode || 500;
             const msg = err?.message || String(err);
-
             console.warn(`>>> ÉCHEC ${apiVersion}/${model} : HTTP ${code} - ${msg}`);
 
-            // Si quota/rate-limit → on renvoie direct 429 (utile pour ton UI)
-            if (code === 429) {
-              return {
-                statusCode: 429,
-                body: JSON.stringify({
-                  error: "Quota/rate limit Gemini atteint (HTTP 429).",
-                  details: msg,
-                  retryDelay: err?.retryDelay || null,
-                  apiVersion,
-                  modelTried: model,
-                }),
-              };
-            }
-
-            // Si clé invalide / pas autorisé, pas la peine de continuer
-            if (code === 401 || code === 403) {
-              return {
-                statusCode: code,
-                body: JSON.stringify({
-                  error: "Clé Gemini invalide ou accès refusé (HTTP 401/403).",
-                  details: msg,
-                }),
-              };
-            }
-
-            // 404 modèle: on continue (c’est justement ce qu’on veut éviter, mais on est safe)
-            // Autres erreurs: on continue sur le prochain modèle
+            // Si c'est un quota (429), inutile d'insister sur ce modèle, on passe au suivant
+            // Si c'est une 404 (modèle introuvable via cet endpoint), on passe au suivant
+            // On continue la boucle
           }
         }
 
@@ -265,36 +243,11 @@ exports.handler = async (event) => {
         const msg = lastGenError?.message || "Aucun modèle n’a répondu.";
         console.error(`Aucun succès sur ${apiVersion}. Dernière erreur: ${code} - ${msg}`);
 
-        // On tente la version suivante (v1beta)
+        // On tente la version d'API suivante
       } catch (err) {
         lastListError = err;
-        const code = err?.statusCode || 500;
-        const msg = err?.message || String(err);
-        console.warn(`ListModels échoué sur ${apiVersion}: HTTP ${code} - ${msg}`);
-
-        // Si quota/clé invalide dès ListModels, on renvoie direct
-        if (code === 429) {
-          return {
-            statusCode: 429,
-            body: JSON.stringify({
-              error: "Quota/rate limit Gemini atteint dès ListModels (HTTP 429).",
-              details: msg,
-              retryDelay: err?.retryDelay || null,
-              apiVersion,
-            }),
-          };
-        }
-        if (code === 401 || code === 403) {
-          return {
-            statusCode: code,
-            body: JSON.stringify({
-              error: "Clé Gemini invalide ou accès refusé (HTTP 401/403) sur ListModels.",
-              details: msg,
-              apiVersion,
-            }),
-          };
-        }
-        // Sinon on tente la version suivante
+        console.warn(`ListModels échoué sur ${apiVersion}: ${err.message}`);
+        // On tente la version suivante
       }
     }
 
@@ -304,7 +257,7 @@ exports.handler = async (event) => {
     return {
       statusCode: code === 0 ? 500 : code,
       body: JSON.stringify({
-        error: "Impossible de lister les modèles / joindre Gemini sur v1 et v1beta.",
+        error: "Impossible de lister les modèles ou de générer une réponse.",
         details: msg,
       }),
     };
