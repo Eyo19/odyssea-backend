@@ -70,7 +70,48 @@ function exportData() {
     a.href = url; a.download = `odyssea_backup_${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+// --- FONCTIONS D'IMPORT MANQUANTES ---
 
+function triggerImport() {
+    document.getElementById('import-file').click();
+}
+
+function handleImport(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (Array.isArray(importedData)) {
+                // On fusionne les données importées avec la liste actuelle
+                // Si l'ID existe déjà, on met à jour, sinon on ajoute.
+                importedData.forEach(newSession => {
+                    const index = sessionList.findIndex(s => s.id === newSession.id);
+                    if (index !== -1) {
+                        sessionList[index] = newSession;
+                    } else {
+                        sessionList.push(newSession);
+                    }
+                });
+                
+                saveAllSessions();
+                renderHub();
+                alert("Importation réussie ! Tes aventures sont à jour.");
+            } else {
+                alert("Format de fichier invalide.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de la lecture du fichier de sauvegarde.");
+        }
+        // Réinitialiser l'input pour permettre de réimporter le même fichier si besoin
+        input.value = '';
+    };
+    reader.readAsText(file);
+}
 function generatePDFReport() {
     // On appelle la fonction partagée en lui passant l'état actuel du jeu et les données tarot
     generateSharedPDF(gameState, GLOBAL_TAROT_DATA);
