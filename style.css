@@ -299,54 +299,69 @@ em { color: #bbb; font-style: italic; }
         margin-bottom: 20px !important;
     }
     
-    /* --- 2. MENU HAMBURGER & ICÔNES PARCHEMIN --- */
-    #mobile-menu-btn {
-        display: flex !important;
-        align-items: center; justify-content: center;
-        position: absolute; top: 10px; left: 10px; z-index: 1000;
-        background: rgba(5, 5, 10, 0.8);
-        border: 1px solid var(--accent-gold); color: var(--accent-gold);
-        border-radius: 4px; width: 40px; height: 40px; font-size: 1.5rem;
-    }
+    /* --- 2. MENU HAMBURGER & ICÔNES PARCHEMIN (CORRIGÉ) --- */
+        #mobile-menu-btn {
+            display: flex !important;
+            align-items: center; justify-content: center;
+            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            background: rgba(5, 5, 10, 0.8);
+            border: 1px solid var(--accent-gold); color: var(--accent-gold);
+            border-radius: 4px; width: 40px; height: 40px; font-size: 1.5rem;
+        }
     
-    .sidebar {
-        display: flex !important; flex-direction: column;
-        position: fixed; top: 0; left: 0; width: 85%; height: 100%;
-        z-index: 1100;
-        background: rgba(5, 5, 10, 0.98);
-        border-right: 1px solid var(--accent-gold);
-        transform: translateX(-100%); transition: transform 0.3s ease;
-        padding-top: 60px; /* Place pour le bouton close */
-    }
-    .sidebar.open { transform: translateX(0); }
-    #sidebar-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 1050;
-    }
+        .sidebar {
+            display: flex !important; flex-direction: column;
+            position: fixed; top: 0; left: 0; width: 85%; height: 100%;
+            z-index: 1100;
+            background: rgba(5, 5, 10, 0.98);
+            border-right: 1px solid var(--accent-gold);
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            padding-top: 60px;
+        }
+        .sidebar.open { transform: translateX(0); }
     
-    /* Styles des items du menu */
-    .nav-item {
-        display: flex !important;
-        align-items: center;
-        justify-content: space-between; /* Ecarte le texte et l'icône */
-        padding: 15px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        width: 100%;
-    }
+        #sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1050;
+        }
     
-    /* Le bouton parchemin (summary) */
-    .summary-btn-side {
-        display: block !important; /* FORCÉ VISIBLE */
-        opacity: 1 !important;
-        font-size: 1.5rem !important;
-        padding: 8px 12px;
-        background: rgba(212, 175, 55, 0.15);
-        border: 1px solid var(--accent-gold);
-        border-radius: 6px;
-        margin-left: 10px;
-        color: var(--accent-gold);
-    }
+        /* CONTENEUR LISTE : GESTION DE L'ESPACE STRICTE */
+        .nav-item {
+            display: flex !important;
+            flex-direction: row !important; /* Force la ligne horizontale */
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
     
+        /* Le texte (div) prend l'espace mais n'écrase pas le reste */
+        .nav-item > div {
+            flex: 1; 
+            min-width: 0; /* Permet au texte d'être coupé si trop long au lieu de pousser */
+            padding-right: 10px;
+        }
+    
+        /* LE BOUTON PARCHEMIN : BLINDÉ CONTRE L'ÉCRASEMENT */
+        .summary-btn-side {
+            display: flex !important; /* Force l'affichage */
+            align-items: center; justify-content: center;
+            width: 40px !important; /* Largeur fixe */
+            height: 40px !important; /* Hauteur fixe */
+            min-width: 40px !important; /* Sécurité Safari iOS */
+            flex-shrink: 0 !important; /* INTERDIT DE RÉTRÉCIR */
+            
+            opacity: 1 !important;
+            font-size: 1.4rem !important;
+            background: rgba(212, 175, 55, 0.15) !important;
+            border: 1px solid var(--accent-gold) !important;
+            border-radius: 6px;
+            color: var(--accent-gold) !important;
+            cursor: pointer;
+            margin-left: 5px;
+        }    
     /* --- 3. VIDÉO INVISIBLE (MAIS ACTIVE POUR LE SON) --- */
     .avatar-column {
         position: absolute !important;
@@ -437,4 +452,31 @@ em { color: #bbb; font-style: italic; }
         font-size: 1rem;
         margin: 0;
     }
+
+/* --- 6. FIX CHIRURGICAL : MODALE RENOMMER/NOUVEAU --- */
+    
+    /* 1. On la force à passer AU-DESSUS de la Sidebar (qui est à 1100) */
+    #game-input-modal {
+        z-index: 9999 !important; 
+        align-items: center !important; /* On centre verticalement (contrairement au Grimoire) */
+        background: rgba(0,0,0,0.85) !important; /* Fond sombre pour le contraste */
+    }
+    
+    /* 2. On annule le "Plein Écran" forcé des autres modales pour celle-ci */
+    #game-input-modal .modal-content {
+        height: auto !important; /* Taille adaptée au contenu */
+        min-height: auto !important; 
+        width: 90% !important; /* Pas 100% pour laisser des marges */
+        max-height: 50vh !important;
+        margin: 0 auto !important; /* Centré */
+        border: 2px solid var(--accent-gold); /* Bordure dorée bien visible */
+        box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    }
+    
+    /* 3. On s'assure que le champ de texte est bien large et tapable */
+    #game-input-modal .modal-textarea {
+        font-size: 1.2rem !important;
+        padding: 20px !important;
+    }
+
 }
