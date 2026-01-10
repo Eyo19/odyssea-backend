@@ -201,18 +201,44 @@ function renderSidebar() {
     });
 }
 
-function startLevel(level, manualSwitch) {
-    gameState.currentLevel = level; renderSidebar(); stopChatAudio(); checkLightningStatus();
-    videoEl.muted = false; videoEl.volume = 1.0; videoEl.src = `videos/${level}.mp4`; 
-    const playPromise = videoEl.play();
-    if (playPromise !== undefined) { playPromise.then(_ => { updateVidBtn(true); }).catch(error => { updateVidBtn(false); }); }
-    if (!gameState.histories[level]) {
-        gameState.histories[level] = []; const card = getCardData(level);
-        if (card && card["TEXTE INTRO"]) gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
-    }
-    renderChat(gameState.histories[level]); renderCardInfo(level); saveCurrentState();
-}
-
+        function startLevel(level, manualSwitch) {
+            // 1. Mise à jour de l'état du jeu
+            gameState.currentLevel = level;
+            renderSidebar();
+            stopChatAudio();
+            checkLightningStatus();
+            
+            // 2. Gestion Vidéo (Le son doit se lancer même si l'image est cachée par le CSS)
+            videoEl.muted = false; 
+            videoEl.volume = 1.0; 
+            videoEl.src = `videos/${level}.mp4`; 
+            
+            // On tente de lancer la vidéo. Si le navigateur bloque (mobile), on ne fait rien (pas d'erreur).
+            const playPromise = videoEl.play();
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    updateVidBtn(true);
+                }).catch(error => {
+                    console.log("Lecture auto bloquée (comportement mobile normal) :", error);
+                    updateVidBtn(false);
+                });
+            }
+            
+            // 3. Gestion de l'Historique de discussion
+            if (!gameState.histories[level]) {
+                gameState.histories[level] = [];
+                const card = getCardData(level);
+                // Ajout du texte d'intro si c'est la première visite
+                if (card && card["TEXTE INTRO"]) {
+                    gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
+                }
+            }
+            
+            // 4. Affichage
+            renderChat(gameState.histories[level]);
+            renderCardInfo(level);
+            saveCurrentState();
+        }
 function parseKeywords(text) {
     if (!text) return [];
     return text.split('/').map(k => k.trim()).filter(k => k.length > 0);
