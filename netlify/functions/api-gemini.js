@@ -6,7 +6,6 @@ const https = require("https");
 // Ordre de préférence (Du plus intelligent/récent au plus basique)
 // J'ai ajouté les modèles V3 et V2 que nous avons vus dans ta liste
 const PREFERRED_MODELS = [
-  "gemini-3-pro-preview",       // LE TOP DU TOP (Janvier 2026)
   "gemini-3-flash-preview",     // Ultra rapide V3
   "gemini-2.0-flash",           // Le standard très stable V2
   "gemini-2.0-flash-exp",       // Expérimental V2
