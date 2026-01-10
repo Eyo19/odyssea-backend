@@ -140,21 +140,26 @@ function closeInputModal() {
     document.getElementById('game-input-modal').style.display = 'none';
 }
 
+// MODIFICATION : Lancement de la vidéo d'intro pour une nouvelle partie
 function confirmGameInput() {
     const name = document.getElementById('game-name-input').value.trim();
     if (!name) return;
     
     if (pendingModalAction === 'new') {
         const newSession = { id: Date.now(), name: name, unlockedLevel: 1, currentLevel: 1, globalSubject: "", histories: {}, chapterData: {} };
-        sessionList.push(newSession); saveAllSessions(); loadGame(newSession.id);
+        sessionList.push(newSession); saveAllSessions(); 
+        
+        // On ferme la modale
+        closeInputModal();
+        // On lance la séquence vidéo avant de charger le jeu
+        playIntroSequence(newSession.id);
+        
     } else if (pendingModalAction === 'rename' && gameState) {
         gameState.name = name;
         saveCurrentState();
-        // Mettre à jour l'affichage si on est dans le Hub ou le Jeu ?
-        // Ici on est dans le jeu, pas besoin de reload le hub.
         alert("Projet renommé !");
+        closeInputModal();
     }
-    closeInputModal();
 }
 
 function loadGame(sessionId) {
@@ -524,3 +529,36 @@ function scrollToBottom() { const c = document.getElementById('chat-container');
 function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
 function toRoman(n) { const r=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII"]; return r[n]||n; }
 function setApiStatus(s) { statusDot.className = 'api-status-dot ' + s; }
+
+// NOUVEAU : Gestion de la vidéo d'intro (8s)
+function playIntroSequence(sessionId) {
+    const overlay = document.getElementById('intro-overlay');
+    const vid = document.getElementById('intro-video-element');
+    
+    if(!overlay || !vid) { loadGame(sessionId); return; } // Sécurité
+
+    overlay.style.display = 'flex';
+    vid.volume = 1.0;
+    vid.currentTime = 0;
+    
+    // Fonction pour finir et lancer le jeu
+    const endIntro = () => {
+        overlay.style.display = 'none';
+        vid.pause();
+        loadGame(sessionId); // On lance le jeu ici
+    };
+
+    // Si la vidéo se termine (environ 8s)
+    vid.onended = endIntro;
+
+    // Sécurité : Force la fin après 8.5s si jamais l'événement 'ended' rate
+    setTimeout(() => {
+        if(overlay.style.display !== 'none') endIntro();
+    }, 8500);
+
+    // Lancer la lecture
+    vid.play().catch(e => {
+        console.log("Autoplay bloqué, on passe l'intro");
+        endIntro();
+    });
+}
