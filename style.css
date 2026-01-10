@@ -224,68 +224,124 @@ em { color: #bbb; font-style: italic; }
 .modal-btn.next:disabled { background: #333; color: #666; cursor: not-allowed; }
 
 /* =========================================
-   5. MEDIA QUERIES (MOBILE FIXE ET ROBUSTE)
+   5. MEDIA QUERIES (CORRECTION DÉFINITIVE)
    ========================================= */
 @media (max-width: 900px) {
-    /* RESET BODY MOBILE */
-    html, body {
-        height: 100dvh; /* Utilise la hauteur dynamique (barre URL prise en compte) */
+    
+    /* 1. ON BRISE LA GRILLE DESKTOP */
+    /* C'est la clé : on passe de grid à block pour que les éléments s'empilent */
+    .app-container {
+        display: block !important; 
+        width: 100vw;
+        height: 100dvh;
         overflow: hidden;
-    }
-
-    /* CONTENEUR PRINCIPAL */
-    .app-container { 
-        display: flex; 
-        flex-direction: column; 
-        width: 100%;
-        height: 100%;
         position: relative;
     }
     
-    /* SIDEBAR (MENU) */
-    .sidebar { 
-        position: fixed; top: 0; left: 0; width: 85%; height: 100%; 
-        z-index: 200; box-shadow: 5px 0 20px rgba(0,0,0,0.9);
-        transform: translateX(-100%); transition: transform 0.3s ease-in-out;
-        display: flex !important; background: rgba(5, 5, 10, 0.98);
+    /* 2. VIDÉO : HORS FLUX (INVISIBLE MAIS ACTIVE) */
+    /* On utilise position: absolute pour la sortir du calcul de largeur */
+    /* Elle ne prendra plus AUCUNE place physique, résolvant l'espace vide à droite */
+    .avatar-column {
+        position: absolute !important;
+        top: -9999px;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        z-index: -1;
+        /* Pas de display:none pour garder le son */
     }
-    .sidebar.open { transform: translateX(0); }
-    #mobile-menu-btn { display: block; position: absolute; top: 15px; left: 15px; z-index: 50; background: rgba(5, 5, 10, 0.6); backdrop-filter: blur(4px); }
-
-    /* VIDEO CACHÉE (Truc 0x0 pixel pour garder le son) */
-    .avatar-column { 
-        position: absolute; width: 0; height: 0; opacity: 0; 
-        pointer-events: none; overflow: hidden; z-index: -1; 
-    }
+    
+    /* Bouton de redimensionnement inutile sur mobile */
     #toggle-video-size-btn { display: none !important; }
-
-    /* CHAT COLUMN (Remplit tout le reste) */
-    .chat-column { 
-        flex: 1; 
-        width: 100%; 
-        height: 100%; 
-        display: flex; 
+    
+    /* 3. CHAT : PLEIN ÉCRAN RÉEL */
+    .chat-column {
+        width: 100% !important; /* Force la largeur totale */
+        height: 100% !important;
+        max-width: 100vw;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-deep);
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Ajustement du scroll pour ne pas être caché par le header/footer */
+    .chat-scroll-area {
+        flex: 1;
+        width: 100%;
+        padding: 70px 20px 20px 20px; /* 70px en haut pour éviter le bouton menu */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 4. MENU HAMBURGER & SIDEBAR */
+    #mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 1000; /* Toujours au-dessus */
+        background: rgba(5, 5, 10, 0.8);
+        border: 1px solid var(--accent-gold);
+        color: var(--accent-gold);
+        border-radius: 4px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.8rem;
+        cursor: pointer;
+    }
+    
+    .sidebar {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 85%;
+        height: 100%;
+        z-index: 1100; /* Au-dessus du bouton menu */
+        background: rgba(5, 5, 10, 0.98);
+        border-right: 1px solid var(--accent-gold);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        padding-top: 20px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    /* Overlay sombre quand le menu est ouvert */
+    #sidebar-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 1050;
+    }
+    
+    /* 5. MODALES (ANALYSE & INPUT) */
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100dvh;
+        border-radius: 0;
+        margin: 0;
+        padding: 20px;
+        display: flex;
         flex-direction: column;
     }
     
-    /* SCROLL AREA */
-    .chat-scroll-area { 
-        padding-top: 60px; /* Espace pour le header */
-        flex: 1; /* Pousse le input vers le bas */
-        min-height: 0; /* Empêche le débordement */
+    .modal-body {
+        flex-grow: 1;
+        overflow-y: auto;
     }
-
-    /* MODALES PLEIN ÉCRAN */
-    .modal-content { width: 100%; height: 100%; max-height: 100dvh; border-radius: 0; margin: 0; padding: 20px; display: flex; flex-direction: column; }
-    .modal-body { flex-grow: 1; }
-    .modal-footer { flex-direction: column-reverse; gap: 10px; padding-bottom: 30px; }
-    .modal-btn { width: 100%; padding: 15px; }
     
-    .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .summary-btn-side { font-size: 1.5rem; padding: 10px; margin-left: 15px; background: rgba(212, 175, 55, 0.1); border-radius: 5px; }
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 15px;
+        padding-bottom: 30px;
+    }
 }
-
-@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-@keyframes pulse-border { 0% { border-color: #9b59b6; } 50% { border-color: white; } 100% { border-color: #9b59b6; } }
-@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
