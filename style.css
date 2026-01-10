@@ -47,8 +47,27 @@ em { color: #bbb; font-style: italic; }
     transition: opacity 0.5s; 
 }
 .hub-content { text-align: center; max-width: 800px; width: 90%; z-index: 2; }
-.hub-logo { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--accent-gold); padding: 4px; margin: 0 auto 20px auto; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); animation: float 6s ease-in-out infinite; }
-.hub-logo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+/* MODIFICATION : Cadre rectangulaire adapté à l'image de garde */
+.hub-logo { 
+    width: auto; 
+    max-width: 300px; 
+    height: auto; 
+    border-radius: 15px; 
+    border: 3px solid var(--accent-gold); 
+    padding: 5px; 
+    margin: 0 auto 20px auto; 
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); 
+    animation: float 6s ease-in-out infinite; 
+}
+.hub-logo img { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 10px; 
+    object-fit: cover; 
+    display: block; 
+}
+
 .hub-title { font-family: 'Cinzel', serif; font-size: 3rem; color: var(--accent-gold); margin-bottom: 10px; }
 .hub-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid var(--accent-gold); display: inline-block; padding-bottom: 10px; }
 .hub-actions { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;}
@@ -286,8 +305,9 @@ em { color: #bbb; font-style: italic; }
         padding-bottom: 40px; /* Marge pour le scroll */
     }
     .hub-logo {
-        width: 80px !important; /* Logo plus petit */
-        height: 80px !important;
+        width: auto !important;
+        max-width: 200px !important; /* Logo plus petit */
+        height: auto !important;
         margin-bottom: 10px !important;
     }
     .hub-title {
@@ -458,16 +478,12 @@ em { color: #bbb; font-style: italic; }
         margin: 0;
     }
 
-/* --- 6. FIX CHIRURGICAL : MODALE RENOMMER/NOUVEAU --- */
-    
-    /* 1. On la force à passer AU-DESSUS de la Sidebar (qui est à 1100) */
+    /* --- 6. FIX CHIRURGICAL : MODALE RENOMMER/NOUVEAU --- */
     #game-input-modal {
         z-index: 9999 !important; 
         align-items: center !important; /* On centre verticalement (contrairement au Grimoire) */
         background: rgba(0,0,0,0.85) !important; /* Fond sombre pour le contraste */
     }
-    
-    /* 2. On annule le "Plein Écran" forcé des autres modales pour celle-ci */
     #game-input-modal .modal-content {
         height: auto !important; /* Taille adaptée au contenu */
         min-height: auto !important; 
@@ -477,11 +493,22 @@ em { color: #bbb; font-style: italic; }
         border: 2px solid var(--accent-gold); /* Bordure dorée bien visible */
         box-shadow: 0 0 30px rgba(0,0,0,0.8);
     }
-    
-    /* 3. On s'assure que le champ de texte est bien large et tapable */
     #game-input-modal .modal-textarea {
         font-size: 1.2rem !important;
         padding: 20px !important;
     }
 
+}
+
+/* MODIFICATION : Overlay Vidéo Intro */
+#intro-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 99999; /* Au-dessus de tout */
+    display: none; /* Caché par défaut */
+    align-items: center; justify-content: center;
+}
+#intro-video-element {
+    width: 100%; 
+    height: 100%; 
+    object-fit: contain; /* CRUCIAL pour afficher la vidéo entière en portrait */
 }
