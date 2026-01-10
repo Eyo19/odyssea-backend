@@ -299,7 +299,8 @@ em { color: #bbb; font-style: italic; }
         margin-bottom: 20px !important;
     }
     
-    /* --- 2. MENU HAMBURGER & ICÔNES PARCHEMIN (CORRIGÉ) --- */
+    /* --- 2. MENU HAMBURGER & ICÔNES PARCHEMIN (FIX POSITION ABSOLUE) --- */
+    
         #mobile-menu-btn {
             display: flex !important;
             align-items: center; justify-content: center;
@@ -325,43 +326,47 @@ em { color: #bbb; font-style: italic; }
             background: rgba(0,0,0,0.8); z-index: 1050;
         }
     
-        /* CONTENEUR LISTE : GESTION DE L'ESPACE STRICTE */
+        /* CONTENEUR LISTE : ON FAIT DE LA PLACE À DROITE */
         .nav-item {
-            display: flex !important;
-            flex-direction: row !important; /* Force la ligne horizontale */
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 15px;
+            display: block !important; /* Plus de flexbox capricieux */
+            position: relative !important; /* Référence pour le bouton absolu */
+            padding: 15px 60px 15px 15px !important; /* 60px à droite pour ne pas que le texte touche le bouton */
             border-bottom: 1px solid rgba(255,255,255,0.05);
             width: 100%;
             box-sizing: border-box;
         }
     
-        /* Le texte (div) prend l'espace mais n'écrase pas le reste */
+        /* Le texte */
         .nav-item > div {
-            flex: 1; 
-            min-width: 0; /* Permet au texte d'être coupé si trop long au lieu de pousser */
-            padding-right: 10px;
+            width: 100%;
+            white-space: nowrap;      /* Une seule ligne */
+            overflow: hidden;         /* Coupe si trop long */
+            text-overflow: ellipsis;  /* ... si trop long */
+            display: block;
         }
     
-        /* LE BOUTON PARCHEMIN : BLINDÉ CONTRE L'ÉCRASEMENT */
+        /* LE BOUTON PARCHEMIN : FORCÉ EN FLOTTANT À DROITE */
         .summary-btn-side {
-            display: flex !important; /* Force l'affichage */
+            display: flex !important;
             align-items: center; justify-content: center;
-            width: 40px !important; /* Largeur fixe */
-            height: 40px !important; /* Hauteur fixe */
-            min-width: 40px !important; /* Sécurité Safari iOS */
-            flex-shrink: 0 !important; /* INTERDIT DE RÉTRÉCIR */
+            
+            position: absolute !important; /* SORTI DU FLUX : RIEN NE PEUT L'ÉCRASER */
+            right: 10px !important;        /* Collé à 10px du bord droit */
+            top: 50% !important;           /* Centré verticalement */
+            transform: translateY(-50%) !important;
+            
+            width: 40px !important; 
+            height: 40px !important; 
+            z-index: 1200 !important;      /* Au-dessus du texte */
             
             opacity: 1 !important;
             font-size: 1.4rem !important;
-            background: rgba(212, 175, 55, 0.15) !important;
+            background: rgba(212, 175, 55, 0.2) !important;
             border: 1px solid var(--accent-gold) !important;
             border-radius: 6px;
             color: var(--accent-gold) !important;
             cursor: pointer;
-            margin-left: 5px;
-        }    
+        }
     /* --- 3. VIDÉO INVISIBLE (MAIS ACTIVE POUR LE SON) --- */
     .avatar-column {
         position: absolute !important;
