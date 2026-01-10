@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Odyssea - L'Incarnation</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="report.js"></script> <style>
+        /* =========================================
+           1. CONFIGURATION GLOBALE
+           ========================================= */
+        :root { 
+            --gold: #d4af37; 
+            --deep: #050511; 
+            --night-blue: #1a1a3a; 
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background: radial-gradient(circle at center, var(--night-blue) 0%, var(--deep) 90%);
+            color: white; font-family: 'Cinzel', serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            user-select: none; -webkit-user-select: none; touch-action: none; /* Empêche le zoom tactile */
+        }
+
+        /* =========================================
+           2. ANIMATION D'ARRIÈRE-PLAN (ÉTOILES)
+           ========================================= */
+        .stars-container { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            overflow: hidden; z-index: 0; pointer-events: none; 
+        }
+        .star { 
+            position: absolute; background: white; border-radius: 50%; 
+            will-change: transform, opacity; 
+        }
+
+        /* =========================================
+           3. L'ORBE (INTERACTION)
+           ========================================= */
+        #orb {
+            width: 150px; height: 150px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+            border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px var(--gold), inset 0 0 20px #fff;
+            z-index: 10; cursor: pointer; transition: transform 0.1s;
+        }
+        /* Effet visuel quand activé (lueur intense) */
+        #orb.active { 
+            filter: brightness(1.3); 
+            box-shadow: 0 0 100px var(--gold), inset 0 0 40px #fff; 
+        }
+
+        /* =========================================
+           4. UI & TEXTES
+           ========================================= */
+        #ui-layer { 
+            position: relative; z-index: 20; display: flex; 
+            flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: none; height: 100%; 
+        }
+        #instruction { 
+            margin-top: 240px; /* Place le texte sous l'orbe */
+            font-family: 'Lato', sans-serif; letter-spacing: 2px; 
+            text-transform: uppercase; font-size: 0.9rem; color: #aaa; 
+            text-align: center; line-height: 1.4; transition: opacity 0.3s; 
+        }
+
+        /* =========================================
+           5. MOTS FLASH (EXPLOSION)
+           ========================================= */
+        .flash-word {
+            position: absolute;
+            left: 50%; top: 50%; /* Départ du centre */
+            color: rgba(255, 255, 255, 0.95);
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--gold);
+            z-index: 20;
+            white-space: nowrap;
+            /* L'animation utilise les variables CSS définies en JS */
+            animation: explodeWord 2s forwards ease-out;
+            will-change: transform, opacity;
+        }
+
+        @keyframes explodeWord { 
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            10% { opacity: 1; }
+            100% { 
+                opacity: 0; 
+                /* Translation vers les coordonnées calculées + zoom */
+                transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(3); 
+            } 
+        }
+
+        /* =========================================
+           6. ÉCRAN FINAL (BIG BANG)
+           ========================================= */
+        #flash-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: white; opacity: 0; pointer-events: none; z-index: 100; 
+        }
+        
+        #final-message {
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            opacity: 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 3s; pointer-events: none; background: black;
+        }
+        #final-message.visible { pointer-events: auto; opacity: 1; }
+        
+        #final-message h1 { 
+            font-size: 2.5rem; color: var(--gold); margin-bottom: 10px; text-align: center; 
+        }
+        #final-message p { 
+            font-family: 'Lato', sans-serif; font-size: 1.1rem; color: #ccc; 
+            margin-bottom: 30px; text-align: center; max-width: 600px; line-height: 1.6; padding: 0 20px;
+        }
+        
+        .grimoire-img { 
+            width: 160px; height: 160px; object-fit: cover; border-radius: 8px; 
+            border: 3px solid var(--gold); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); 
+            margin-bottom: 25px; animation: floatImg 4s ease-in-out infinite; 
+        }
+        @keyframes floatImg { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-10px); } 
+        }
+
+        .btn-row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .btn-final { 
+            padding: 12px 35px; background: transparent; border: 1px solid var(--gold); 
+            color: var(--gold); cursor: pointer; font-family: 'Cinzel', serif; font-size: 1rem; 
+            transition: 0.3s; border-radius: 4px; 
+        }
+        .btn-final:hover { 
+            background: var(--gold); color: var(--deep); box-shadow: 0 0 20px var(--gold); 
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-container" id="stars-container"></div>
+    
+    <div id="orb"></div>
+    
+    <div id="ui-layer">
+        <div id="instruction">Maintenez pour charger...</div>
+    </div>
+    
+    <div id="flash-overlay"></div>
+
+    <div id="final-message">
+        <h1>Le Saut est fait.</h1>
+        <p id="final-subtitle">L'inconnu est maintenant votre terrain de jeu.<br>Ton aventure est ancrée.</p>
+        
+        <img src="grimoire.jpeg" alt="Grimoire Final" class="grimoire-img" onerror="this.style.display='none'">
+        
+        <div class="btn-row">
+            <button class="btn-final" onclick="triggerPDF()">📥 Récupérer le Grimoire</button>
+            <button class="btn-final" onclick="window.location.href='index.html'">Retour au Hub</button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // 1. GESTION DES DONNÉES ET INITIALISATION
+        // =========================================================
+        const GLOBAL_TAROT_DATA_URL = 'tarot_data.json';
+        const STORAGE_KEY = 'odyssea_saves_v16_final_polished';
+        
+        let GLOBAL_TAROT_DATA = null;
+        let sessionData = null; 
+        
+        // Mots de base pour l'explosion
+        let extractedWords = ["DOUTE", "FORCE", "IDÉE", "PEUR", "COURAGE", "VISION", "MONDE", "MAT", "SAUT", "CONFIANCE", "AVENIR", "DESTIN"]; 
+        
+        window.onload = async function() {
+            try {
+                const r = await fetch(GLOBAL_TAROT_DATA_URL);
+                GLOBAL_TAROT_DATA = await r.json();
+            } catch(e) { console.warn("Attention: Impossible de charger tarot_data.json"); }
+            
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const rawSaves = localStorage.getItem(STORAGE_KEY);
+            
+            if (rawSaves && id) {
+                const list = JSON.parse(rawSaves);
+                sessionData = list.find(s => s.id == id);
+                if (sessionData) extractUserKeywords(sessionData);
+            }
+            createStars();
+        };
+        const FRENCH_STOPWORDS = new Set([
+            "le", "la", "les", "un", "une", "des", "du", "de", "d", "l", "ce", "cet", "cette", "ces", 
+            "mon", "ton", "son", "ma", "ta", "sa", "mes", "tes", "ses", "notre", "votre", "leur", 
+            "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles", "lui", "eux",
+            "et", "ou", "mais", "donc", "or", "ni", "car", "pour", "par", "dans", "sur", "avec", "sans", "sous",
+            "qui", "que", "quoi", "dont", "ou", "quand", "comment", "pourquoi",
+            "être", "avoir", "faire", "suis", "es", "est", "sommes", "êtes", "sont", "ai", "as", "a", "avons", "avez", "ont",
+            "tout", "tous", "toute", "toutes", "plus", "moins", "très", "bien", "mal", "peux", "veut", "dois", "faut",
+            "cela", "ca", "ici", "là", "alors", "après", "avant", "depuis", "pendant", "vers", "chez"
+        ]);
+        
+        function extractUserKeywords(data) {
+            let smartWords = new Set(); // Utiliser un Set évite les doublons automatiquement
+            
+            // 1. LE CŒUR DU PROJET (Nom & Sujet)
+            if(data.name) smartWords.add(data.name.toUpperCase());
+            if(data.globalSubject) {
+                // On extrait les mots importants du sujet global
+                extractSignificantWords(data.globalSubject).forEach(w => smartWords.add(w));
+            }
+            
+            // 2. PARCOURIR LES CHAPITRES JOUÉS
+            if(data.chapterData && GLOBAL_TAROT_DATA) {
+                Object.keys(data.chapterData).forEach(levelId => {
+                    const chap = data.chapterData[levelId];
+                    
+                    // A. ARCHÉTYPES (Mots puissants du Tarot)
+                    // On cherche la carte correspondante dans les données globales
+                    const cardInfo = GLOBAL_TAROT_DATA.find(c => c.ID == levelId);
+                    if (cardInfo && cardInfo["3 MOTS"]) {
+                        // Ex: "Volonté / Action / Magie" -> ["VOLONTÉ", "ACTION", "MAGIE"]
+                        cardInfo["3 MOTS"].split('/').forEach(m => {
+                            smartWords.add(m.trim().toUpperCase());
+                        });
+                    }
+                    
+                    // B. RÉSULTATS CONCRETS (Les Tâches validées)
+                    if (chap.tasks) {
+                        chap.tasks.forEach(t => {
+                            if (t.done) {
+                                // On extrait les verbes et noms des tâches accomplies
+                                extractSignificantWords(t.text).forEach(w => smartWords.add(w));
+                            }
+                        });
+                    }
+                    
+                    // C. L'HISTOIRE (Les Résumés)
+                    // On prend quelques mots clés du résumé s'il existe
+                    if (chap.summary) {
+                        const words = extractSignificantWords(chap.summary);
+                        // On ne prend que les 3 plus longs mots du résumé (souvent les plus signifiants)
+                        words.sort((a, b) => b.length - a.length).slice(0, 3).forEach(w => smartWords.add(w));
+                    }
+                });
+            }
+            
+            // 3. CONVERSION FINALE
+            if(smartWords.size > 0) {
+                // On convertit le Set en Array
+                let finalArray = Array.from(smartWords);
+                
+                // On mélange un peu pour ne pas avoir que l'ordre chronologique
+                finalArray.sort(() => Math.random() - 0.5);
+                
+                // On remplace la liste par défaut
+                extractedWords = finalArray;
+            }
+            
+            console.log("Mots extraits intelligemment :", extractedWords);
+        }
+        
+        // Fonction utilitaire pour nettoyer le texte et trouver les "pépites"
+        function extractSignificantWords(text) {
+            if (!text) return [];
+            // 1. Nettoyage (minuscules, enlever ponctuation)
+            const clean = text.toLowerCase().replace(/['".,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
+            // 2. Découpage
+            const tokens = clean.split(/\s+/);
+            // 3. Filtrage
+            return tokens.filter(w => {
+                // Doit faire plus de 3 lettres et ne pas être un "stopword"
+                return w.length > 3 && !FRENCH_STOPWORDS.has(w);
+            }).map(w => w.toUpperCase()); // Tout en majuscule pour le style
+        }
+        
+        // =========================================================
+        // 2. MOTEUR AUDIO (CORRIGÉ ET RIGOUREUX)
+        // =========================================================
+        let audioCtx = null;
+        let osc = null, gainNode = null;
+        let noiseNode = null, noiseGain = null;
+        
+        function initAudio() {
+            // Si le contexte existe déjà :
+            if (audioCtx) { 
+                // S'il est fermé (après un précédent Big Bang), on le recrée car on ne peut pas rouvrir un contexte fermé.
+                if (audioCtx.state === 'closed') {
+                    audioCtx = null; 
+                } 
+                // S'il est suspendu (lâché bouton), on le relance.
+                else if (audioCtx.state === 'suspended') {
+                    audioCtx.resume(); 
+                    return; 
+                } else {
+                    return; // Il tourne déjà
+                }
+            }
+            
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext; 
+                audioCtx = new AC();
+                
+                // --- OSCILLATEUR (Le "Hum" grave) ---
+                osc = audioCtx.createOscillator(); 
+                osc.type = 'sine'; 
+                osc.frequency.value = 50; 
+                
+                gainNode = audioCtx.createGain(); 
+                gainNode.gain.value = 0; // Silence au départ
+                
+                // --- BRUIT BLANC (Le "Souffle") ---
+                const bufferSize = 2 * audioCtx.sampleRate; 
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = buffer.getChannelData(0); 
+                for(let i=0; i<bufferSize; i++) output[i] = Math.random() * 2 - 1;
+                
+                noiseNode = audioCtx.createBufferSource(); 
+                noiseNode.buffer = buffer; 
+                noiseNode.loop = true;
+                
+                noiseGain = audioCtx.createGain(); 
+                noiseGain.gain.value = 0; // Silence au départ
+                
+                // Filtre Lowpass pour adoucir le bruit
+                const filter = audioCtx.createBiquadFilter(); 
+                filter.type = 'lowpass'; 
+                filter.frequency.value = 400;
+                
+                // Câblage
+                osc.connect(gainNode); 
+                gainNode.connect(audioCtx.destination);
+                
+                noiseNode.connect(filter); 
+                filter.connect(noiseGain); 
+                noiseGain.connect(audioCtx.destination);
+                
+                // Démarrage (mais volume à 0)
+                osc.start(); 
+                noiseNode.start();
+                
+            } catch(e) { console.log("Audio API non supportée", e); }
+        }
+        
+        function updateAudio(level) { 
+            if(!audioCtx || audioCtx.state === 'closed') return; 
+            
+            const t = audioCtx.currentTime;
+            const volume = level > 0 ? (level / 100) * 0.8 : 0;
+            const freq = 50 + (level * 8);
+            
+            // Transition douce pour éviter les "pops"
+            if(gainNode) gainNode.gain.setTargetAtTime(volume, t, 0.1);
+            if(noiseGain) noiseGain.gain.setTargetAtTime(volume * 0.6, t, 0.1); 
+            if(osc) osc.frequency.setTargetAtTime(freq, t, 0.1);
+        }
+        
+        function stopAudioEngine() {
+            // ARRÊT TOTAL ET DÉFINITIF
+            if (audioCtx && audioCtx.state !== 'closed') {
+                audioCtx.close().then(() => {
+                    audioCtx = null; // Reset complet
+                });
+            }
+        }
+        
+        function pauseAudioEngine() {
+            // MISE EN PAUSE (Économie CPU + Silence parfait)
+            if (audioCtx && audioCtx.state === 'running') {
+                // On baisse le volume à 0 avant de suspendre pour éviter un "clac"
+                const t = audioCtx.currentTime;
+                if(gainNode) gainNode.gain.setTargetAtTime(0, t, 0.1);
+                if(noiseGain) noiseGain.gain.setTargetAtTime(0, t, 0.1);
+                
+                // On suspend après une fraction de seconde
+                setTimeout(() => {
+                    if(audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+                }, 200);
+            }
+        }
+        
+        // =========================================================
+        // 3. MOTEUR GRAPHIQUE
+        // =========================================================
+        const orb = document.getElementById('orb');
+        const instruction = document.getElementById('instruction');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const finalMsg = document.getElementById('final-message');
+        const starsContainer = document.getElementById('stars-container');
+        
+        let isHolding = false;
+        let charge = 0; 
+        let animationFrame;
+        let finished = false;
+        let stars = [];
+        const NUM_STARS = 1200; 
+        const ORB_RADIUS = 75;
+        
+        function createStars() {
+            const w = window.innerWidth; const h = window.innerHeight;
+            const maxDist = Math.sqrt(w*w + h*h) / 1.5; 
+            for (let i = 0; i < NUM_STARS; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star'); 
+                starsContainer.appendChild(star);
+                stars.push({
+                    el: star, angle: Math.random() * Math.PI * 2,
+                    dist: Math.random() * maxDist, speed: 0.002 + Math.random() * 0.008,
+                    size: Math.random() * 2 + 0.5, maxDist: maxDist
+                });
+                star.style.width = star.style.height = `${stars[stars.length-1].size}px`;
+            }
+        }
+        
+        function loop() {
+            if (finished) return;
+            
+            if (isHolding) { 
+                charge += 0.5; 
+                if (charge > 100) charge = 100; 
+            } else { 
+                charge -= 3; 
+                // SI ON ARRIVE À 0 : ON ARRÊTE TOUT POUR GARANTIR LE SILENCE
+                if (charge <= 0) { 
+                    charge = 0; 
+                    updateVortex(0);
+                    
+                    // STOP RIGOROUS : On suspend le moteur audio
+                    pauseAudioEngine();
+                    
+                    cancelAnimationFrame(animationFrame); 
+                    animationFrame = null; 
+                    return; 
+                } 
+            }
+            
+            updateVortex(charge); 
+            updateAudio(charge);
+            animationFrame = requestAnimationFrame(loop);
+        }
+        
+        function updateVortex(level) {
+            const cx = window.innerWidth / 2; const cy = window.innerHeight / 2;
+            const scale = 1 + (level / 150);
+            let orbTrans = `translate(-50%, -50%) scale(${scale})`;
+            if (level > 5) { const s = level/6; orbTrans += ` translate(${(Math.random()-0.5)*s}px, ${(Math.random()-0.5)*s}px)`; }
+            orb.style.transform = orbTrans;
+            
+            if (level > 20 && Math.random() < (level / 600)) spawnExplodingWord(level);
+            
+            const cf = level / 100; 
+            const suck = 1 + (cf * 15); const rot = 1 + (cf * 10);
+            
+            stars.forEach(s => {
+                const dr = 300 / (s.dist + 1); s.angle += s.speed * rot * (isHolding ? dr : 1);
+                if (isHolding) { 
+                    s.dist -= suck; 
+                    if (s.dist < ORB_RADIUS) { s.dist = s.maxDist; s.angle = Math.random() * 6.28; } 
+                } else { if (s.dist < s.maxDist) s.dist += 1; }
+                    
+                    const x = cx + Math.cos(s.angle) * s.dist - (s.size/2);
+                    const y = cy + Math.sin(s.angle) * s.dist - (s.size/2);
+                    let op = 0.3 + (cf * 0.7); if(s.dist > s.maxDist - 50) op = 0;
+                    s.el.style.opacity = op; s.el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                });
+                
+                if (level > 10) { 
+                    const r = 26 + (level/3); 
+                    document.body.style.background = `radial-gradient(circle at center, rgb(${r}, 26, 58) 0%, var(--deep) ${90 - level/2}%)`; 
+                } else if (!isHolding) {
+                    document.body.style.background = `radial-gradient(circle at center, var(--night-blue) 0%, var(--deep) 90%)`;
+                }
+            }
+                
+                function spawnExplodingWord(level) {
+                    const el = document.createElement('div'); el.className = 'flash-word';
+                    el.innerText = extractedWords[Math.floor(Math.random() * extractedWords.length)];
+                    const fontSize = 1 + Math.random() * (0.5 + level/50); el.style.fontSize = `${fontSize}rem`;
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 150 + Math.random() * 200 + (level * 3); 
+                    el.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                    el.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+                    document.body.appendChild(el); 
+                    setTimeout(() => el.remove(), 2000);
+                }
+                
+                // =========================================================
+                // 4. GESTION DES ÉVÉNEMENTS
+                // =========================================================
+                function startCharge(e) {
+                    if (finished) return; 
+                    if(e.cancelable) e.preventDefault(); 
+                    
+                    initAudio(); // Démarre ou reprend le contexte
+                    isHolding = true; 
+                    orb.classList.add('active');
+                    instruction.innerHTML = "Lâchez quand vous sentirez que c'est le moment<br>de faire le saut...";
+                    instruction.style.color = "#d4af37";
+                    
+                    if (!animationFrame) loop();
+                }
+                
+                function stopCharge() {
+                    if (finished) return; 
+                    isHolding = false; 
+                    orb.classList.remove('active');
+                    
+                    if (charge > 96) {
+                        triggerBigBang();
+                    } else { 
+                        instruction.innerHTML = "Maintenez pour charger..."; 
+                        instruction.style.color = "#aaa"; 
+                        // Note : le son se coupe dans la loop() quand charge atteint 0
+                    }
+                }
+                
+                function triggerBigBang() {
+                    finished = true; 
+                    
+                    // 1. VISUEL
+                    flashOverlay.style.opacity = 1; 
+                    flashOverlay.style.transition = "opacity 0.05s"; 
+                    orb.style.display = 'none'; 
+                    document.getElementById('ui-layer').style.display='none'; 
+                    starsContainer.style.display='none';
+                    document.body.style.background = "black";
+                    
+                    // 2. AUDIO : ARRÊT NET ET RIGOUREUX
+                    if (audioCtx) {
+                        const t = audioCtx.currentTime;
+                        // On force le volume à 0 rapidement
+                        if(gainNode) {
+                            gainNode.gain.cancelScheduledValues(t);
+                            gainNode.gain.setValueAtTime(gainNode.gain.value, t);
+                            gainNode.gain.linearRampToValueAtTime(0, t + 1.5); // Fade out 1.5s
+                        }
+                        if(noiseGain) {
+                            noiseGain.gain.cancelScheduledValues(t);
+                            noiseGain.gain.setValueAtTime(noiseGain.gain.value, t);
+                            noiseGain.gain.linearRampToValueAtTime(0, t + 1.5);
+                        }
+                        
+                        // KILL SWITCH : On ferme définitivement le contexte après le fade out
+                        setTimeout(() => {
+                            stopAudioEngine();
+                        }, 1600);
+                    }
+                    
+                    // 3. AFFICHAGE FINAL
+                    setTimeout(() => {
+                        flashOverlay.style.transition = "opacity 4s ease-in"; 
+                        flashOverlay.style.opacity = 0;
+                        setTimeout(() => finalMsg.classList.add('visible'), 1500);
+                    }, 100);
+                }
+                
+                function triggerPDF() {
+                    if(typeof generateSharedPDF === 'function' && sessionData) {
+                        generateSharedPDF(sessionData, GLOBAL_TAROT_DATA);
+                    } else { alert("Données indisponibles pour le PDF."); }
+                }
+                
+                // ÉCOUTEURS
+                orb.addEventListener('mousedown', startCharge); 
+                window.addEventListener('mouseup', stopCharge);
+                orb.addEventListener('touchstart', startCharge, {passive: false}); 
+                window.addEventListener('touchend', stopCharge);
+    </script>
+</body>
+</html>

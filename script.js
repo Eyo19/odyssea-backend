@@ -72,41 +72,8 @@ function exportData() {
 }
 
 function generatePDFReport() {
-    if(!gameState) return;
-    const container = document.createElement('div');
-    container.style.width = '800px'; container.style.padding = '40px'; container.style.fontFamily = "'Lato', sans-serif"; container.style.color = '#333'; container.style.background = '#fff';
-    let htmlContent = `<div style="text-align:center; border-bottom:2px solid #d4af37; padding-bottom:20px; margin-bottom:30px;"><h1 style="font-family:'Cinzel', serif; color:#050511; font-size:2.5rem; margin:0;">${gameState.name}</h1><p style="color:#666; font-size:1rem; margin-top:10px;">Rapport de Projet Odyssea • ${new Date().toLocaleDateString()}</p></div>`;
-    if(gameState.globalSubject) htmlContent += `<div style="background:#f9f9f9; border-left:5px solid #d4af37; padding:20px; margin-bottom:30px;"><h2 style="font-family:'Cinzel', serif; color:#d4af37; margin-top:0;">L'Idée Globale</h2><p style="font-size:1.1rem; line-height:1.6;">${gameState.globalSubject}</p></div>`;
-    for(let i = 1; i <= 22; i++) {
-        const data = gameState.chapterData[i];
-        if(data && (data.summary || (data.tasks && data.tasks.length > 0))) {
-            const card = getCardData(i);
-            htmlContent += `<div style="margin-bottom:30px; page-break-inside: avoid;"><h3 style="font-family:'Cinzel', serif; color:#050511; border-bottom:1px solid #eee; padding-bottom:5px;">${toRoman(i)}. ${card.NOM.toUpperCase()}</h3>${data.summary ? `<p style="line-height:1.5; color:#444; margin-bottom:15px;">${data.summary.replace(/\n/g, '<br>')}</p>` : ''}`;
-            if(data.tasks && data.tasks.length > 0) {
-                htmlContent += `<ul style="list-style:none; padding:0;">`;
-                data.tasks.forEach(t => { htmlContent += `<li style="padding:5px 0; color:${t.done ? '#006400' : '#333'}; font-family:monospace; font-size:1rem;">${t.done ? '☑' : '☐'} ${t.text}</li>`; });
-                htmlContent += `</ul>`;
-            }
-            htmlContent += `</div>`;
-        }
-    }
-    container.innerHTML = htmlContent;
-    html2pdf().set({ margin: 0.5, filename: `Rapport_${gameState.name.replace(/\s+/g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(container).save();
-}
-
-function triggerImport() { document.getElementById('import-file').click(); }
-function handleImport(input) {
-    const file = input.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data)) {
-                if(confirm("Écraser les parties actuelles ?")) { sessionList = data; saveAllSessions(); renderHub(); alert("Import réussi !"); }
-            } else alert("Fichier invalide.");
-        } catch (err) { alert("Erreur lecture."); }
-    };
-    reader.readAsText(file); input.value = '';
+    // On appelle la fonction partagée en lui passant l'état actuel du jeu et les données tarot
+    generateSharedPDF(gameState, GLOBAL_TAROT_DATA);
 }
 
 function renderHub() {
@@ -140,7 +107,7 @@ function closeInputModal() {
     document.getElementById('game-input-modal').style.display = 'none';
 }
 
-// MODIFICATION : Lancement de la vidéo d'intro pour une nouvelle partie
+// Lancement de la vidéo d'intro pour une nouvelle partie
 function confirmGameInput() {
     const name = document.getElementById('game-name-input').value.trim();
     if (!name) return;
@@ -206,44 +173,44 @@ function renderSidebar() {
     });
 }
 
-        function startLevel(level, manualSwitch) {
-            // 1. Mise à jour de l'état du jeu
-            gameState.currentLevel = level;
-            renderSidebar();
-            stopChatAudio();
-            checkLightningStatus();
-            
-            // 2. Gestion Vidéo (Le son doit se lancer même si l'image est cachée par le CSS)
-            videoEl.muted = false; 
-            videoEl.volume = 1.0; 
-            videoEl.src = `videos/${level}.mp4`; 
-            
-            // On tente de lancer la vidéo. Si le navigateur bloque (mobile), on ne fait rien (pas d'erreur).
-            const playPromise = videoEl.play();
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    updateVidBtn(true);
-                }).catch(error => {
-                    console.log("Lecture auto bloquée (comportement mobile normal) :", error);
-                    updateVidBtn(false);
-                });
-            }
-            
-            // 3. Gestion de l'Historique de discussion
-            if (!gameState.histories[level]) {
-                gameState.histories[level] = [];
-                const card = getCardData(level);
-                // Ajout du texte d'intro si c'est la première visite
-                if (card && card["TEXTE INTRO"]) {
-                    gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
-                }
-            }
-            
-            // 4. Affichage
-            renderChat(gameState.histories[level]);
-            renderCardInfo(level);
-            saveCurrentState();
+function startLevel(level, manualSwitch) {
+    // 1. Mise à jour de l'état du jeu
+    gameState.currentLevel = level;
+    renderSidebar();
+    stopChatAudio();
+    checkLightningStatus();
+    
+    // 2. Gestion Vidéo
+    videoEl.muted = false; 
+    videoEl.volume = 1.0; 
+    videoEl.src = `videos/${level}.mp4`; 
+    
+    const playPromise = videoEl.play();
+    if (playPromise !== undefined) {
+        playPromise.then(_ => {
+            updateVidBtn(true);
+        }).catch(error => {
+            console.log("Lecture auto bloquée (comportement mobile normal) :", error);
+            updateVidBtn(false);
+        });
+    }
+    
+    // 3. Gestion de l'Historique de discussion
+    if (!gameState.histories[level]) {
+        gameState.histories[level] = [];
+        const card = getCardData(level);
+        // Ajout du texte d'intro si c'est la première visite
+        if (card && card["TEXTE INTRO"]) {
+            gameState.histories[level].push({ role: "model", parts: [{ text: card["TEXTE INTRO"] }] });
         }
+    }
+    
+    // 4. Affichage
+    renderChat(gameState.histories[level]);
+    renderCardInfo(level);
+    saveCurrentState();
+}
+
 function parseKeywords(text) {
     if (!text) return [];
     return text.split('/').map(k => k.trim()).filter(k => k.length > 0);
@@ -449,9 +416,24 @@ function saveSummaryData(goNext) {
     gameState.chapterData[lvl].summary = resumeEl ? resumeEl.value.trim() : "";
     if (lvl === 1 && ideaEl) { gameState.chapterData[lvl].idea = ideaEl.value.trim(); gameState.globalSubject = ideaEl.value.trim(); }
     renderSidebar(); saveCurrentState();
+    
     if (goNext) {
-        const nextLvl = lvl + 1; if (nextLvl > gameState.unlockedLevel) gameState.unlockedLevel = nextLvl;
-        closeModal(); if (getCardData(nextLvl)) startLevel(nextLvl); else alert("Félicitations !");
+        const nextLvl = lvl + 1; 
+        if (nextLvl > gameState.unlockedLevel) gameState.unlockedLevel = nextLvl;
+        
+        closeModal(); 
+        
+        // --- MODIFICATION CHIRURGICALE POUR LA FINALE ---
+        if (getCardData(nextLvl)) {
+            // S'il y a un niveau suivant (normal)
+            startLevel(nextLvl); 
+        } else {
+            // S'il n'y a plus de niveau (C'est la fin)
+            saveCurrentState();
+            // On redirige vers la nouvelle page finale
+            window.location.href = `finale.html?id=${currentSessionId}`;
+        }
+        
         saveCurrentState();
     } else closeModal();
 }
@@ -530,7 +512,7 @@ function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
 function toRoman(n) { const r=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII"]; return r[n]||n; }
 function setApiStatus(s) { statusDot.className = 'api-status-dot ' + s; }
 
-// NOUVEAU : Gestion de la vidéo d'intro (8s)
+// Gestion de la vidéo d'intro (8s)
 function playIntroSequence(sessionId) {
     const overlay = document.getElementById('intro-overlay');
     const vid = document.getElementById('intro-video-element');
