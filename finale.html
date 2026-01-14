@@ -5,10 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Odyssea - L'Incarnation</title>
     
+    <script>
+        (function() {
+            const allowedSources = ["au-21.fr", "archipel", "netlify.app", "localhost"];
+            const salesPage = "https://www.au-21.fr/pricing-plans";
+            const referrer = document.referrer ? document.referrer.toLowerCase() : "";
+            let isAllowed = false;
+            
+            if (sessionStorage.getItem("access_granted") === "true") {
+                isAllowed = true;
+            } else {
+                for (let source of allowedSources) {
+                    if (referrer.includes(source)) {
+                        isAllowed = true;
+                        sessionStorage.setItem("access_granted", "true");
+                        break;
+                    }
+                }
+            }
+            if (!isAllowed) { window.location.href = salesPage; }
+        })();
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="report.js"></script> <style>
+    <script src="report.js"></script> 
+    
+    <style>
         /* =========================================
            1. CONFIGURATION GLOBALE
            ========================================= */
@@ -147,6 +171,14 @@
     </style>
 </head>
 <body>
+
+    <a href="https://www.au-21.fr/portail-des-applis" target="_top" title="Retour à l'Archipel" 
+        style="position: fixed; top: 20px; left: 20px; z-index: 999999; display: block; width: 60px; height: 60px; border-radius: 50% !important; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); border: 2px solid rgba(255,255,255,0.3); overflow: hidden; cursor: pointer; transition: transform 0.2s; background-color: #000;" 
+        onmouseover="this.style.transform='scale(1.1)'" 
+        onmouseout="this.style.transform='scale(1)'">
+        <img src="Archipel.jpg" alt="Retour Archipel" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50% !important;">
+    </a>
+
     <div class="stars-container" id="stars-container"></div>
     
     <div id="orb"></div>
