@@ -2,8 +2,31 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Odyssea - De l'idée à l'incarnation</title>
+    
+    <script>
+        (function() {
+            const allowedSources = ["au-21.fr", "archipel", "netlify.app", "localhost"];
+            const salesPage = "https://www.au-21.fr/pricing-plans";
+            const referrer = document.referrer ? document.referrer.toLowerCase() : "";
+            let isAllowed = false;
+            
+            if (sessionStorage.getItem("access_granted") === "true") {
+                isAllowed = true;
+            } else {
+                for (let source of allowedSources) {
+                    if (referrer.includes(source)) {
+                        isAllowed = true;
+                        sessionStorage.setItem("access_granted", "true");
+                        break;
+                    }
+                }
+            }
+            if (!isAllowed) { window.location.href = salesPage; }
+        })();
+    </script>
+
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,17 +37,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="intro-overlay">
-        <video id="intro-video-element" playsinline>
-            <source src="/video22.mp4" type="video/mp4">
-        </video>
-    </div>
-
-    <button id="mobile-menu-btn" onclick="toggleSidebar()" style="display:none;">☰</button>
-
-    <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;"></div>
-
+    <a href="https://www.au-21.fr/portail-des-applis" target="_top" title="Retour à l'Archipel" 
+        style="position: fixed; top: 20px; left: 20px; z-index: 999999; display: block; width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); border: 2px solid rgba(255,255,255,0.3); overflow: hidden; cursor: pointer; transition: transform 0.2s; background-color: #000;" 
+        onmouseover="this.style.transform='scale(1.1)'" 
+        onmouseout="this.style.transform='scale(1)'">
+        <img src="Archipel.jpg" alt="Retour Archipel" style="width: 100%; height: 100%; object-fit: cover;">
+    </a>
     <div id="validation-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -40,24 +58,9 @@
         </div>
     </div>
 
-    <div id="game-input-modal" class="modal" style="z-index: 200;">
-        <div class="modal-content" style="max-height: 300px; height: auto;">
-            <div class="modal-header">
-                <h2 id="input-modal-title">Nouvelle Aventure</h2>
-            </div>
-            <div class="modal-body" style="display:flex; flex-direction:column; justify-content:center;">
-                <input type="text" id="game-name-input" class="modal-textarea" style="min-height:50px; text-align:center; font-size:1.2rem;" placeholder="Nom du projet...">
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn cancel" onclick="closeInputModal()">Annuler</button>
-                <button class="modal-btn next" id="input-modal-confirm-btn">Valider</button>
-            </div>
-        </div>
-    </div>
-
     <div id="screen-hub">
         <div class="hub-content">
-            <div class="hub-logo"><img src="GardeOdyssea.jpg" alt="Garde Odyssea"></div>
+            <div class="hub-logo"><img src="logoodyssea.jpeg" alt="Logo Odyssea"></div>
             <h1 class="hub-title">Odyssea</h1>
             <div class="hub-subtitle">De l'idée à son incarnation dans le Monde</div>
             <div class="hub-actions">
@@ -66,18 +69,16 @@
                 <input type="file" id="import-file" style="display:none" onchange="handleImport(this)">
             </div>
             <div class="hub-grid">
-                <div class="hub-card new" onclick="openGameInputModal('new')"><span>+</span><h3>Nouvelle Aventure</h3><p>Débuter un nouveau projet</p></div>
+                <div class="hub-card new" onclick="createNewGame()"><span>+</span><h3>Nouvelle Aventure</h3><p>Débuter un nouveau projet</p></div>
                 <div id="hub-list" style="display:contents;"></div>
             </div>
         </div>
     </div>
 
     <div id="screen-game" class="app-container" style="display:none;">
-        
-        <aside class="sidebar" id="main-sidebar">
+        <aside class="sidebar">
             <div class="brand" onclick="goHome()">
                 <div class="logo-wrapper" style="width:50px; height:50px;"><img src="logoodyssea.jpeg" class="logo-img"></div>
-                <button class="rename-btn-sidebar" onclick="event.stopPropagation(); openGameInputModal('rename')">✎ Renommer</button>
             </div>
             <ul class="nav-list" id="arcana-list"></ul>
             <div class="sidebar-footer">
@@ -86,8 +87,6 @@
         </aside>
 
         <section class="avatar-column">
-            <button id="toggle-video-size-btn" onclick="toggleVideoSize()">↕</button>
-            
             <div class="video-wrapper">
                 <div class="video-container">
                     <video id="avatar-video" class="avatar-video" playsinline onclick="videoControl('toggle')"></video>
@@ -117,7 +116,6 @@
     </div>
 
     <audio id="tts-player"></audio>
-    <script src="report.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
