@@ -4,30 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Odyssea - De l'idée à l'incarnation</title>
-    
-    <script>
-        (function() {
-            const allowedSources = ["au-21.fr", "archipel", "netlify.app", "localhost"];
-            const salesPage = "https://www.au-21.fr/pricing-plans";
-            const referrer = document.referrer ? document.referrer.toLowerCase() : "";
-            let isAllowed = false;
-            
-            if (sessionStorage.getItem("access_granted") === "true") {
-                isAllowed = true;
-            } else {
-                for (let source of allowedSources) {
-                    if (referrer.includes(source)) {
-                        isAllowed = true;
-                        sessionStorage.setItem("access_granted", "true");
-                        break;
-                    }
-                }
-            }
-            if (!isAllowed) { window.location.href = salesPage; }
-        })();
-    </script>
 
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
