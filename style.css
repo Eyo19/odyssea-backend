@@ -281,225 +281,147 @@ em { color: #bbb; font-style: italic; }
 .modal-btn.next:disabled { background: #333; color: #666; cursor: not-allowed; }
 
 /* =========================================
-   5. MEDIA QUERIES (VERSION MOBILE FINALE & OPTIMISÉE)
+   5. MEDIA QUERIES (VERSION MOBILE CORRIGÉE)
    ========================================= */
 @media (max-width: 900px) {
     
-    /* --- GLOBAL & LAYOUT --- */
-    /* On force le mode bloc pour empiler les écrans */
+    /* --- 0. CORRECTION BOUTON ARCHIPEL (Déplacé à droite) --- */
+    /* On cible le lien qui contient "portail-des-applis" */
+    a[href*="portail-des-applis"] {
+        top: 10px !important;
+        left: auto !important;
+        right: 10px !important; /* On le colle à droite */
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    /* --- 1. GLOBAL & LAYOUT --- */
     .app-container {
-        display: block !important; 
+        /* RETRAIT DU !IMPORTANT : Permet au JS de masquer (display: none) ce conteneur */
+        display: block; 
         width: 100vw;
         height: 100dvh;
         overflow: hidden;
         position: relative;
     }
     
-    /* --- 1. ÉCRAN D'ACCUEIL (HUB) - LOGO NON COUPÉ --- */
+    /* Sécurité : Si le JS ajoute style="display:none", on force le masquage */
+    .app-container[style*="none"] {
+        display: none !important;
+    }
+    
+    /* --- 2. ÉCRAN D'ACCUEIL (HUB) --- */
     #screen-hub {
-        justify-content: flex-start !important; /* On aligne en haut pour ne pas couper */
+        justify-content: flex-start !important; 
         padding-top: 40px !important;
-        overflow-y: auto; /* Scroll si l'écran est trop petit */
+        overflow-y: auto; 
     }
-    .hub-content {
-        padding-bottom: 40px; /* Marge pour le scroll */
-    }
+    .hub-content { padding-bottom: 40px; }
     .hub-logo {
         width: auto !important;
-        max-width: 200px !important; /* Logo plus petit */
+        max-width: 200px !important;
         height: auto !important;
         margin-bottom: 10px !important;
     }
-    .hub-title {
-        font-size: 2rem !important; /* Titre réduit */
-        margin-bottom: 5px !important;
+    .hub-title { font-size: 2rem !important; margin-bottom: 5px !important; }
+    .hub-subtitle { font-size: 0.9rem !important; margin-bottom: 20px !important; }
+    
+    /* --- 3. MENU HAMBURGER & INTERFACE (CORRIGÉS) --- */
+    
+    /* PAR DÉFAUT : ON CACHE LE HAMBURGER (C'est le JS qui l'affichera) */
+    #mobile-menu-btn {
+        display: none; /* Caché par défaut */
+        align-items: center; justify-content: center;
+        position: absolute; top: 10px; left: 10px; z-index: 1000;
+        background: rgba(5, 5, 10, 0.8);
+        border: 1px solid var(--accent-gold); color: var(--accent-gold);
+        border-radius: 4px; width: 40px; height: 40px; font-size: 1.5rem;
     }
-    .hub-subtitle {
-        font-size: 0.9rem !important;
-        margin-bottom: 20px !important;
+    
+    /* La sidebar elle-même */
+    .sidebar {
+        display: flex !important; flex-direction: column;
+        position: fixed; top: 0; left: 0; width: 85%; height: 100%;
+        z-index: 1100;
+        background: rgba(5, 5, 10, 0.98);
+        border-right: 1px solid var(--accent-gold);
+        transform: translateX(-100%); transition: transform 0.3s ease;
+        padding-top: 60px;
+    }
+    .sidebar.open { transform: translateX(0); }
+    
+    #sidebar-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 1050;
     }
     
-    /* --- 2. MENU HAMBURGER & ICÔNES PARCHEMIN (FIX POSITION ABSOLUE) --- */
+    /* Liste de navigation */
+    .nav-item {
+        display: block !important; 
+        position: relative !important; 
+        padding: 15px 60px 15px 15px !important; 
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        width: 100%; box-sizing: border-box;
+    }
+    .nav-item > div { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
     
-        #mobile-menu-btn {
-            display: flex !important;
-            align-items: center; justify-content: center;
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
-            background: rgba(5, 5, 10, 0.8);
-            border: 1px solid var(--accent-gold); color: var(--accent-gold);
-            border-radius: 4px; width: 40px; height: 40px; font-size: 1.5rem;
-        }
+    /* Bouton Parchemin dans la sidebar */
+    .summary-btn-side {
+        display: flex !important; align-items: center; justify-content: center;
+        position: absolute !important; right: 10px !important; top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 40px !important; height: 40px !important; z-index: 1200 !important;
+        opacity: 1 !important; font-size: 1.4rem !important;
+        background: rgba(212, 175, 55, 0.2) !important;
+        border: 1px solid var(--accent-gold) !important;
+        border-radius: 6px; color: var(--accent-gold) !important;
+    }
     
-        .sidebar {
-            display: flex !important; flex-direction: column;
-            position: fixed; top: 0; left: 0; width: 85%; height: 100%;
-            z-index: 1100;
-            background: rgba(5, 5, 10, 0.98);
-            border-right: 1px solid var(--accent-gold);
-            transform: translateX(-100%); transition: transform 0.3s ease;
-            padding-top: 60px;
-        }
-        .sidebar.open { transform: translateX(0); }
-    
-        #sidebar-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 1050;
-        }
-    
-        /* CONTENEUR LISTE : ON FAIT DE LA PLACE À DROITE */
-        .nav-item {
-            display: block !important; /* Plus de flexbox capricieux */
-            position: relative !important; /* Référence pour le bouton absolu */
-            padding: 15px 60px 15px 15px !important; /* 60px à droite pour ne pas que le texte touche le bouton */
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            width: 100%;
-            box-sizing: border-box;
-        }
-    
-        /* Le texte */
-        .nav-item > div {
-            width: 100%;
-            white-space: nowrap;      /* Une seule ligne */
-            overflow: hidden;         /* Coupe si trop long */
-            text-overflow: ellipsis;  /* ... si trop long */
-            display: block;
-        }
-    
-        /* LE BOUTON PARCHEMIN : FORCÉ EN FLOTTANT À DROITE */
-        .summary-btn-side {
-            display: flex !important;
-            align-items: center; justify-content: center;
-            
-            position: absolute !important; /* SORTI DU FLUX : RIEN NE PEUT L'ÉCRASER */
-            right: 10px !important;        /* Collé à 10px du bord droit */
-            top: 50% !important;           /* Centré verticalement */
-            transform: translateY(-50%) !important;
-            
-            width: 40px !important; 
-            height: 40px !important; 
-            z-index: 1200 !important;      /* Au-dessus du texte */
-            
-            opacity: 1 !important;
-            font-size: 1.4rem !important;
-            background: rgba(212, 175, 55, 0.2) !important;
-            border: 1px solid var(--accent-gold) !important;
-            border-radius: 6px;
-            color: var(--accent-gold) !important;
-            cursor: pointer;
-        }
-    /* --- 3. VIDÉO INVISIBLE (MAIS ACTIVE POUR LE SON) --- */
+    /* --- 4. VIDÉO INVISIBLE --- */
     .avatar-column {
-        position: absolute !important;
-        top: -9999px; left: -9999px;
-        width: 1px; height: 1px; opacity: 0;
-        z-index: -1;
+        position: absolute !important; top: -9999px; left: -9999px;
+        width: 1px; height: 1px; opacity: 0; z-index: -1;
     }
     #toggle-video-size-btn { display: none !important; }
     
-    /* --- 4. CHAT PLEIN ÉCRAN --- */
+    /* --- 5. CHAT PLEIN ÉCRAN --- */
     .chat-column {
         width: 100% !important; height: 100% !important;
         display: flex; flex-direction: column;
-        background: var(--bg-deep);
-        padding: 0; margin: 0;
+        background: var(--bg-deep); padding: 0; margin: 0;
     }
     .chat-scroll-area {
         flex: 1; width: 100%;
         padding: 60px 15px 15px 15px; /* Padding haut pour le bouton menu */
         overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
+    /* BARRE DE CHAT : Cachée par défaut si on n'est pas dans le jeu (géré par le parent app-container qui est hidden) */
     .interaction-bar {
-        padding: 10px;
-        padding-bottom: env(safe-area-inset-bottom, 15px);
+        padding: 10px; padding-bottom: env(safe-area-inset-bottom, 15px);
         background: rgba(5, 5, 10, 1);
     }
     .input-wrapper { gap: 5px; }
-    .chat-input { padding: 10px; font-size: 16px; } /* 16px évite le zoom iOS */
+    .chat-input { padding: 10px; font-size: 16px; }
     
-    /* --- 5. MODALE ANALYSE (OPTIMISÉE MOBILE) --- */
-    .modal {
-        padding: 0; background: rgba(0,0,0,0.95);
-        align-items: flex-start;
-    }
-    .modal-content {
-        width: 100%; height: 100dvh; max-height: 100dvh;
-        border: none; border-radius: 0; margin: 0; padding: 10px;
-        display: flex; flex-direction: column;
-    }
-    
-    /* Header plus compact */
+    /* --- 6. MODALES (Optimisation) --- */
+    .modal { padding: 0; background: rgba(0,0,0,0.95); align-items: flex-start; }
+    .modal-content { width: 100%; height: 100dvh; max-height: 100dvh; border: none; border-radius: 0; margin: 0; padding: 10px; display: flex; flex-direction: column; }
     .modal-header { margin-bottom: 10px; padding-bottom: 5px; flex-shrink: 0; }
-    .modal-header h2 { font-size: 1.4rem; }
-    
-    /* CORPS SCROLLABLE (ASCENSEUR GLOBAL) */
-    .modal-body {
-        flex-grow: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-right: 5px;
-    }
-    
-    /* Correction des blocs de texte "Précédemment" */
-    .modal-text-static {
-        max-height: none !important; /* Laisse le contenu s'étendre */
-        white-space: pre-wrap; /* Garde les retours à la ligne */
-        font-size: 0.9rem;
-        background: rgba(255,255,255,0.05);
-        padding: 10px;
-    }
-    
-    /* Séparation visuelle des éléments "Précédemment" */
-    .chapter-prev-block {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 20px;
-        border-bottom: 1px solid rgba(255,255,255,0.15);
-        padding-bottom: 15px;
-    }
-    /* Ces classes sont générées par le JS, on les style ici */
+    .modal-body { flex-grow: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 5px; }
+    .modal-text-static { max-height: none !important; white-space: pre-wrap; font-size: 0.9rem; background: rgba(255,255,255,0.05); padding: 10px; }
+    .chapter-prev-block { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; }
     .prev-header { color: var(--accent-gold); font-weight: bold; font-size: 1rem; }
     .prev-content { color: #ccc; line-height: 1.5; font-size: 0.9rem; margin-bottom: 5px; }
     .prev-action-list { padding-left: 5px; border-left: 2px solid #4CAF50; margin-top: 5px; }
     .prev-action-item { display: block; color: #8f8; font-size: 0.85rem; margin-bottom: 3px; }
+    .modal-footer { flex-direction: column-reverse; gap: 8px; padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); flex-shrink: 0; }
+    .modal-btn { width: 100%; padding: 12px; font-size: 1rem; margin: 0; }
     
-    /* Footer compacté */
-    .modal-footer {
-        flex-direction: column-reverse; /* Boutons empilés */
-        gap: 8px;
-        padding-top: 10px;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-        flex-shrink: 0;
-    }
-    .modal-btn {
-        width: 100%;
-        padding: 12px;
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    /* --- 6. FIX CHIRURGICAL : MODALE RENOMMER/NOUVEAU --- */
-    #game-input-modal {
-        z-index: 9999 !important; 
-        align-items: center !important; /* On centre verticalement (contrairement au Grimoire) */
-        background: rgba(0,0,0,0.85) !important; /* Fond sombre pour le contraste */
-    }
-    #game-input-modal .modal-content {
-        height: auto !important; /* Taille adaptée au contenu */
-        min-height: auto !important; 
-        width: 90% !important; /* Pas 100% pour laisser des marges */
-        max-height: 50vh !important;
-        margin: 0 auto !important; /* Centré */
-        border: 2px solid var(--accent-gold); /* Bordure dorée bien visible */
-        box-shadow: 0 0 30px rgba(0,0,0,0.8);
-    }
-    #game-input-modal .modal-textarea {
-        font-size: 1.2rem !important;
-        padding: 20px !important;
-    }
-
+    /* MODALE INPUT */
+    #game-input-modal { z-index: 9999 !important; align-items: center !important; background: rgba(0,0,0,0.85) !important; }
+    #game-input-modal .modal-content { height: auto !important; min-height: auto !important; width: 90% !important; max-height: 50vh !important; margin: 0 auto !important; border: 2px solid var(--accent-gold); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+    #game-input-modal .modal-textarea { font-size: 1.2rem !important; padding: 20px !important; }
 }
-
 /* MODIFICATION : Overlay Vidéo Intro */
 #intro-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;

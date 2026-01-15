@@ -171,18 +171,49 @@ function confirmGameInput() {
 }
 
 function loadGame(sessionId) {
-    currentSessionId = sessionId; gameState = sessionList.find(s => s.id === sessionId);
+    currentSessionId = sessionId; 
+    gameState = sessionList.find(s => s.id === sessionId);
     if(!gameState.histories) gameState.histories = {};
     if(!gameState.chapterData) gameState.chapterData = {};
+    
+    // 1. MASQUER LE BOUTON ARCHIPEL (Sécurité, il ne doit pas gêner le jeu)
+    const archipelBtn = document.querySelector('a[href*="portail-des-applis"]');
+    if(archipelBtn) archipelBtn.style.display = 'none';
+    
+    // 2. AFFICHER LE HAMBURGER (Uniquement sur mobile)
+    const hamburger = document.getElementById('mobile-menu-btn');
+    if(hamburger && window.innerWidth < 900) {
+        hamburger.style.display = 'flex';
+    }
+    
     document.getElementById('screen-hub').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('screen-hub').style.display = 'none';
-        document.getElementById('screen-game').style.display = 'grid';
+        
+        // Gestion rigoureuse de l'affichage mobile vs desktop
+        const gameScreen = document.getElementById('screen-game');
+        if (window.innerWidth < 900) {
+            gameScreen.style.display = 'block'; // Mobile
+        } else {
+            gameScreen.style.display = 'grid'; // Desktop
+        }
+        
         startLevel(gameState.currentLevel, false); 
     }, 500);
 }
-
-function goHome() { saveCurrentState(); window.location.reload(); }
+function goHome() { 
+    saveCurrentState(); 
+    
+    // 1. RESTAURER LE BOUTON ARCHIPEL
+    const archipelBtn = document.querySelector('a[href*="portail-des-applis"]');
+    if(archipelBtn) archipelBtn.style.display = 'block'; // Ou 'flex' selon ton CSS initial
+    
+    // 2. MASQUER LE HAMBURGER (On retourne au hub)
+    const hamburger = document.getElementById('mobile-menu-btn');
+    if(hamburger) hamburger.style.display = 'none';
+    
+    window.location.reload(); 
+}
 function getCardData(levelId) { return GLOBAL_TAROT_DATA ? GLOBAL_TAROT_DATA.find(c => c.ID == levelId) : null; }
 
 function renderSidebar() {
